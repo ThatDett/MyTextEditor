@@ -4,6 +4,7 @@
 
 int main()
 {
+    std::cout << "executed\n";
     GLFWwindow* window;
 
     if (!glfwInit())
@@ -20,14 +21,14 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+
+
         glClear(GL_COLOR_BUFFER_BIT);
-
         glfwSwapBuffers(window);
-
         glfwPollEvents();
     }
 
     glfwTerminate();
-    std::cout << "executed\n";
+    std::cout << "end\n";
     return 0;
 }
