@@ -4,6 +4,8 @@ project(MyTextEditor)
 
 set(FILE_SOURCES 
     main.cpp 
+    src/Application.cpp
+    src/Shader.cpp
     #external/glad/glad/glad.c i dont need to compile everytime, just have the .o, but should include for others
     
 )
