@@ -4,13 +4,22 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include <cassert>
 
 #include "Shader.hpp"
 
-Shader::Shader(std::string_view filepath, bool shouldAttach) :
+#define NOT_SET 100000 
+
+Shader::Shader(std::string_view filepath) :
     vertexShader(glCreateShader(GL_VERTEX_SHADER)),
     fragmentShader(glCreateShader(GL_FRAGMENT_SHADER)),
-    vertexSource("null"), fragmentSource("null")
+    vertexSource("null"), fragmentSource("null"), program(NOT_SET)
+{
+    LoadFromFile(filepath);
+    Compile();
+}
+
+void Shader::LoadFromFile(std::string_view filepath)
 {
     std::ifstream file(filepath.data());
 
@@ -25,6 +34,8 @@ Shader::Shader(std::string_view filepath, bool shouldAttach) :
 
     std::string line;
     std::stringstream ss[2];
+
+    std::ofstream test("../test.txt");
 
     ShaderType shaderType = ShaderType::NONE;
     while(std::getline(file, line))
@@ -43,25 +54,22 @@ Shader::Shader(std::string_view filepath, bool shouldAttach) :
         else
         {
             ss[(int)shaderType] << line << std::endl;
+            std::cout << line << std::endl;
+            test << line << std::endl;
         }
     }
 
+    assert(shaderType != ShaderType::NONE);
+
     vertexSource   = ss[(int)ShaderType::VERTEX].str().c_str();
     fragmentSource = ss[(int)ShaderType::FRAGMENT].str().c_str();
-
-    Compile();
-
-    if (shouldAttach)
-    {
-        glUseProgram(program);
-    }
 }
 
 void Shader::Compile()
 {
     if (vertexSource == "null" || fragmentSource == "null")
     {
-        std::cout << "Shader::Compile: Nothing to compile\n";
+        std::cout << "Shader::Compile: Nothing to compile: vertex or fragment source is null \n";
         exit(EXIT_FAILURE);
     }
 
@@ -81,6 +89,14 @@ void Shader::Compile()
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << '\n';
     }
 
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+
+    if(!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << '\n';
+    }
+
     program = glCreateProgram();
 
     glAttachShader(program, vertexShader);
@@ -97,4 +113,29 @@ void Shader::Compile()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader); 
+}
+
+Shader::~Shader()
+{
+    glDeleteProgram(program);
+}
+
+void Shader::Use() const
+{
+    glUseProgram(program);
+}
+
+void Shader::SetUniform(std::string_view name, bool value) const
+{         
+    glUniform1i(glGetUniformLocation(program, name.data()), (int)value); 
+}
+
+void Shader::SetUniform(std::string_view name, int value) const
+{ 
+    glUniform1i(glGetUniformLocation(program, name.data()), value); 
+}
+
+void Shader::SetUniform(std::string_view name, float value) const
+{ 
+    glUniform1f(glGetUniformLocation(program, name.data()), value); 
 }
