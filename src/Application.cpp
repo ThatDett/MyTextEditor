@@ -6,6 +6,8 @@
 #include "Application.hpp"
 #include "Shader.hpp"
 
+#define LOOP true
+
 struct Dimensions
 {
     int width;
@@ -93,9 +95,7 @@ void Application::Run() const
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
-    glUniform1f(glGetUniformLocation(shader.program, "u_offset"), 1.0f); 
-
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(window) && LOOP)
     {
         ProcessInput(window);
     

@@ -35,8 +35,6 @@ void Shader::LoadFromFile(std::string_view filepath)
     std::string line;
     std::stringstream ss[2];
 
-    std::ofstream test("../test.txt");
-
     ShaderType shaderType = ShaderType::NONE;
     while(std::getline(file, line))
     {
@@ -53,16 +51,24 @@ void Shader::LoadFromFile(std::string_view filepath)
         }
         else
         {
-            ss[(int)shaderType] << line << std::endl;
-            std::cout << line << std::endl;
-            test << line << std::endl;
+            ss[(int)shaderType] << line << '\n';
+            //test << line << '\n';
         }
+
+        //if (shaderType == ShaderType::VERTEX)
+            // std::cout << line << std::endl;
     }
 
     assert(shaderType != ShaderType::NONE);
 
-    vertexSource   = ss[(int)ShaderType::VERTEX].str().c_str();
-    fragmentSource = ss[(int)ShaderType::FRAGMENT].str().c_str();
+    //This is possibly shit code
+    vertexPtr = new std::string(ss[(int)ShaderType::VERTEX].str());
+    fragmentPtr = new std::string(ss[(int)ShaderType::FRAGMENT].str());
+
+    vertexSource = vertexPtr->c_str();
+    fragmentSource = fragmentPtr->c_str();
+
+    //std::cout << vertexSource << std::endl;
 }
 
 void Shader::Compile()
@@ -118,6 +124,8 @@ void Shader::Compile()
 Shader::~Shader()
 {
     glDeleteProgram(program);
+    delete vertexPtr;
+    delete fragmentPtr;
 }
 
 void Shader::Use() const

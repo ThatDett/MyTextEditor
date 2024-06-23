@@ -25,6 +25,8 @@ public:
     GLuint vertexShader;
     GLuint fragmentShader;
 
+    std::string *vertexPtr, *fragmentPtr;
+
     const char* vertexSource;
     const char* fragmentSource;
 };
