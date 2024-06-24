@@ -1,7 +1,7 @@
 #include <iostream>
-#include <math.h>
 
 #include "GLAD/glad.h"
+#include "stb_image.h"
 
 #include "Application.hpp"
 #include "Shader.hpp"
@@ -14,7 +14,7 @@ struct Dimensions
     int height;
 };
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 } 
@@ -39,7 +39,7 @@ void Application::Run() const
 
     Dimensions windowSize = {.width = 800, .height = 600};
 
-    GLFWwindow* window = glfwCreateWindow(windowSize.width, windowSize.height, "Text Editor", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(windowSize.width, windowSize.height, "Text Editor", NULL, NULL);
     if (!window)
     {
         std::cout << "fail on window creation\n";
@@ -60,15 +60,23 @@ void Application::Run() const
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
 
     float vertices[] = {
-        // positions         // colors
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+        // positions          // colors           // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
     };
 
-    unsigned int indices[] = { 
-        0, 1, 2,
-    };  
+   unsigned int indices[] = {  
+        0, 1, 3,   
+        1, 2, 3    
+    };
+
+    float texCoords[] = {
+        0.0f, 0.0f,  // lower-left corner  
+        1.0f, 0.0f,  // lower-right corner
+        0.5f, 1.0f   // top-center corner
+    };
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
@@ -87,13 +95,44 @@ void Application::Run() const
     const Shader shader("../src/shaders/shader.glsl");
     shader.Use();
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);   
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    //Texture
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("../res/container.jpg", &width, &height, &nrChannels, 0); 
+
+    unsigned int texture;
+    glGenTextures(1, &texture);  
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 
     while (!glfwWindowShouldClose(window) && LOOP)
     {
@@ -115,7 +154,7 @@ void Application::Run() const
      glDeleteBuffers(1, &VBO);  
 }
 
-void Application::ProcessInput(GLFWwindow* window) const
+void Application::ProcessInput(GLFWwindow *window) const
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -124,5 +163,5 @@ void Application::ProcessInput(GLFWwindow* window) const
 void Application::Draw() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

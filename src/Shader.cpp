@@ -23,7 +23,8 @@ void Shader::LoadFromFile(std::string_view filepath)
 {
     std::ifstream file(filepath.data());
 
-    if (file.fail()) { 
+    if (file.fail()) 
+    { 
         std::cerr << "Error details: " << filepath.data() << ": " << strerror(errno) << std::endl; 
     } 
 

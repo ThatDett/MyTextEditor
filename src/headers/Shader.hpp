@@ -12,22 +12,26 @@ public:
     Shader(std::string_view filepath);
     ~Shader();
 
-    void LoadFromFile(std::string_view filepath);
-    void Compile();
     void Use() const;
 
     void SetUniform(std::string_view name, bool value) const;
     void SetUniform(std::string_view name, int value) const;
     void SetUniform(std::string_view name, float value) const;
 
+public:
     GLuint program;
 
     GLuint vertexShader;
     GLuint fragmentShader;
 
-    std::string *vertexPtr, *fragmentPtr;
+    const char *vertexSource;
+    const char *fragmentSource;
+    
+private:
+    void LoadFromFile(std::string_view filepath);
+    void Compile();
 
-    const char* vertexSource;
-    const char* fragmentSource;
+private:
+    std::string *vertexPtr, *fragmentPtr;
 };
 #endif

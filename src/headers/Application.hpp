@@ -9,7 +9,7 @@ public:
     ~Application();
 
     void Run() const;
-    void ProcessInput(GLFWwindow* window) const;
+    void ProcessInput(GLFWwindow *window) const;
     void Draw() const;
 private:
 };
