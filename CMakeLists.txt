@@ -6,6 +6,9 @@ set(FILE_SOURCES
     main.cpp 
     src/Application.cpp
     src/Shader.cpp
+    src/VertexArray.cpp
+    src/VertexBuffer.cpp
+    src/IndexBuffer.cpp
     external/stb_image/stb_implementation.cpp
     #external/glad/glad/glad.c i dont need to compile everytime, just have the .o, but should include for others
     
