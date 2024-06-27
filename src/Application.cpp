@@ -3,15 +3,8 @@
 #include "GLAD/glad.h"
 #include <stb_image.h>
 #include <glm.hpp>
-#include "gtc/matrix_transform.hpp"
-#include "gtc/type_ptr.hpp"
 
 #include <Application.hpp>
-#include <Shader.hpp>
-#include <VertexArray.hpp>
-#include <VertexBuffer.hpp>
-#include <IndexBuffer.hpp>
-#include <Camera.hpp>
 
 #define LOOP true
 
@@ -20,46 +13,9 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 } 
 
-float deltaTime = 0.0f;	
-float lastFrame = 0.0f; 
-
-bool firstMouse = true;
-float lastX;
-float lastY;
-
-Camera camera(glm::vec3(0.0f, 0.0f,  3.0f), glm::vec3(0.0f, 1.0f,  0.0f), -90.0, 0.0f);
-
-void MouseCallback(GLFWwindow* window, double mouseXin, double mouseYin)
-{
-    float mouseX = static_cast<float>(mouseXin);
-    float mouseY = static_cast<float>(mouseYin);
-
-    if (firstMouse)
-    {
-        lastX = mouseX;
-        lastY = mouseY;
-        firstMouse = false;
-    }
-
-    float xoffset = mouseX - lastX;
-    float yoffset = lastY - mouseY; // reversed since y-coordinates go from bottom to top
-    lastX = mouseX;
-    lastY = mouseY;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(yoffset); 
-}
-
 Application::Application() :
     windowSize{.width = 1366 / 2, .height = 768 / 2}
 {
-    lastX = windowSize.width / 2;
-    lastY = windowSize.height / 2;
-
     std::cout << "Execute\n";
 
     if (!glfwInit())
@@ -86,9 +42,7 @@ Application::Application() :
     }
 
     glViewport(0, 0, windowSize.width, windowSize.height);
-    glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-    glfwSetCursorPosCallback(window, MouseCallback);
-    glfwSetScrollCallback(window, ScrollCallback);  
+    glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);  
 
     glEnable(GL_DEPTH_TEST);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
@@ -107,188 +61,11 @@ void Application::Run() const
 {
     glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
 
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-  
-        -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-  
-        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-  
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-  
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
- 
-        -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f
-    };
-
-   unsigned int indices[] = {  
-        0, 1, 3,   
-        1, 2, 3    
-    };
-
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f), 
-        glm::vec3( 2.0f,  5.0f, -15.0f), 
-        glm::vec3(-1.5f, -2.2f, -2.5f),  
-        glm::vec3(-3.8f, -2.0f, -12.3f),  
-        glm::vec3( 2.4f, -0.4f, -3.5f),  
-        glm::vec3(-1.7f,  3.0f, -7.5f),  
-        glm::vec3( 1.3f, -2.0f, -2.5f),  
-        glm::vec3( 1.5f,  2.0f, -2.5f), 
-        glm::vec3( 1.5f,  0.2f, -1.5f), 
-        glm::vec3(-1.3f,  1.0f, -1.5f)  
-    };
-
-    float texCoords[] = {
-        0.0f, 0.0f,  // lower-left corner  
-        1.0f, 0.0f,  // lower-right corner
-        0.5f, 1.0f   // top-center corner
-    };
-
-    const VertexArray vao;
-    vao.Bind();
-
-    const VertexBuffer vbo(vertices, sizeof(vertices));
-    vbo.Bind();
-    vbo.SendData();
-
-    const IndexBuffer ibo(indices, sizeof(indices));
-    ibo.Bind();
-    ibo.SendData();
-
-    //Should probably separate vertex and fragment shader into a separate file
-    Shader shader("../src/shaders/shader.glsl");
-    shader.Use();
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);   
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    //Texture
-    unsigned int texture[2];
-    glGenTextures(2, texture);  
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("../res/container.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
-
-    data = stbi_load("../res/awesomeface.png", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-
-    shader.SetUniform("texture1", 0); 
-    shader.SetUniform("texture2", 1); 
-
-    //Camera
-
-    glm::mat4 view;
-    view = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 3.0f), 
-        glm::vec3(0.0f, 0.0f, 0.0f), 
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
-
     while (LOOP && !glfwWindowShouldClose(window))
     {
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        camera.deltaTime = deltaTime;
-        lastFrame = currentFrame;
-
         ProcessInput(window);
     
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glm::mat4 model = glm::mat4(1.0f);
-
-        const float radius = 10.0f;
-        float camX = sin(glfwGetTime()) * radius;
-        float camZ = cos(glfwGetTime()) * radius;
-        glm::mat4 view;
-        view = camera.GetViewMatrix();
-
-        glm::mat4 projection;
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)windowSize.width / (float)windowSize.height, 0.1f, 100.0f);
-        shader.SetMat4("projection", projection);
-        shader.SetMat4("model", model);
-        shader.SetMat4("view", view);
-
-        // glDrawElements(GL_TRIANGLES, ibo.Length(), GL_UNSIGNED_INT, 0);
-        for(unsigned int i = 0; i < 10; ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i; 
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-            shader.SetMat4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -306,18 +83,25 @@ void Application::ProcessInput(GLFWwindow *window) const
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    const float cameraSpeed = 4.0f * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::FORWARD);
+    {
+
+    }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::BACKWARD);
+    {
+
+    }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::LEFT);
+    {
+
+    }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::RIGHT);
+    {
+
+    }
 }
 
 void Application::Draw(GLuint numberOfElements) const
