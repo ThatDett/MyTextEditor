@@ -5,17 +5,17 @@ VertexArray::VertexArray()
     glGenVertexArrays(1, &ID);
 }
 
-VertexArray::~VertexArray()
+VertexArray::~VertexArray() 
 {
     glDeleteVertexArrays(1, &ID);  
 }
 
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
     glBindVertexArray(ID);
 }
 
-void VertexArray::Unbind()
+void VertexArray::Unbind() const
 {
     glBindVertexArray(0);
 }

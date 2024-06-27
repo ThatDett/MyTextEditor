@@ -11,17 +11,17 @@ VertexBuffer::~VertexBuffer()
     glDeleteBuffers(1, &ID);
 }
 
-void VertexBuffer::Bind()
+void VertexBuffer::Bind() const
 {
     glBindBuffer(GL_ARRAY_BUFFER, ID);
 }
 
-void VertexBuffer::SendData(GLenum bufferMode /*= GL_STATIC_DRAW*/)
+void VertexBuffer::SendData(GLenum bufferMode /*= GL_STATIC_DRAW*/) const
 {
     glBufferData(GL_ARRAY_BUFFER, bufferSize, data, bufferMode);
 }
 
-void VertexBuffer::Unbind()
+void VertexBuffer::Unbind() const
 {
     glBindBuffer(GL_ARRAY_BUFFER, ID);
 }

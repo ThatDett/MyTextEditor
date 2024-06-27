@@ -17,7 +17,7 @@ public:
 
     void Run() const;
     void ProcessInput(GLFWwindow *window) const;
-    void Draw() const;
+    void Draw(GLuint numberOfElements) const;
 public:
     Dimensions windowSize;
     GLFWwindow *window;

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "glad/glad.h"
+#include <glm.hpp>
 
 class Shader
 {

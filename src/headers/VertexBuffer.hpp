@@ -9,9 +9,9 @@ public:
     VertexBuffer(GLfloat *data, size_t bufferSize);
     ~VertexBuffer();
 
-    void Bind();
-    void Unbind();
-    void SendData(GLenum bufferMode = GL_STATIC_DRAW);    
+    void Bind() const;
+    void SendData(GLenum bufferMode = GL_STATIC_DRAW) const;    
+    void Unbind() const;
 public:
     GLfloat *data;
     size_t bufferSize;
