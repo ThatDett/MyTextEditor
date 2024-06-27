@@ -31,7 +31,7 @@ glm::mat4 Camera::GetViewMatrix()
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
+void Camera::ProcessKeyboard(CameraMovement direction)
 {
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
@@ -42,7 +42,7 @@ void Camera::ProcessKeyboard(CameraMovement direction, float deltaTime)
 
     if (direction == LEFT)
         Position -= Right * velocity;
-        
+
     if (direction == RIGHT)
         Position += Right * velocity;
 }
@@ -68,15 +68,11 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constr
 void Camera::ProcessMouseScroll(float yoffset)
 {
     Zoom -= (float)yoffset;
-    if (Zoom < 1.0f)
-        Zoom = 1.0f;
-    if (Zoom > 45.0f)
-        Zoom = 45.0f;
+    Zoom = glm::clamp(Zoom, 1.0f, 45.0f);
 }
 
 void Camera::UpdateCameraVectors()
 {
-
     glm::vec3 front;
     front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     front.y = sin(glm::radians(Pitch));

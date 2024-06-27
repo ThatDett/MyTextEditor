@@ -20,13 +20,12 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 } 
 
-
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f; 
 
 bool firstMouse = true;
-float lastX =  800.0f / 2.0;
-float lastY =  600.0 / 2.0;
+float lastX;
+float lastY;
 
 Camera camera(glm::vec3(0.0f, 0.0f,  3.0f), glm::vec3(0.0f, 1.0f,  0.0f), -90.0, 0.0f);
 
@@ -257,6 +256,7 @@ void Application::Run() const
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
+        camera.deltaTime = deltaTime;
         lastFrame = currentFrame;
 
         ProcessInput(window);
@@ -308,16 +308,16 @@ void Application::ProcessInput(GLFWwindow *window) const
 
     const float cameraSpeed = 4.0f * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
+        camera.ProcessKeyboard(CameraMovement::FORWARD);
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+        camera.ProcessKeyboard(CameraMovement::BACKWARD);
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+        camera.ProcessKeyboard(CameraMovement::LEFT);
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
+        camera.ProcessKeyboard(CameraMovement::RIGHT);
 }
 
 void Application::Draw(GLuint numberOfElements) const

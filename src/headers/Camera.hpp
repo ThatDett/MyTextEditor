@@ -29,7 +29,7 @@ public:
 
     glm::mat4 GetViewMatrix();
 
-    void ProcessKeyboard(CameraMovement direction, float deltaTime);
+    void ProcessKeyboard(CameraMovement direction);
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
     void ProcessMouseScroll(float yoffset);
 
@@ -46,6 +46,8 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+
+    float deltaTime;
 
 private:
     void UpdateCameraVectors();
