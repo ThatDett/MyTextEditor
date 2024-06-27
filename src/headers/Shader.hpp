@@ -3,9 +3,11 @@
 
 #include <string_view>
 #include <string>
+#include <unordered_map>
 
 #include "glad/glad.h"
 #include <glm.hpp>
+#include <gtc/type_ptr.hpp>
 
 class Shader
 {
@@ -15,9 +17,12 @@ public:
 
     void Use() const;
 
-    void SetUniform(std::string_view name, bool value) const;
-    void SetUniform(std::string_view name, int value) const;
-    void SetUniform(std::string_view name, float value) const;
+    void SetUniform(std::string_view name, bool value);
+    void SetUniform(std::string_view name, int value);
+    void SetUniform(std::string_view name, float value);
+    void SetMat4(std::string_view name, const glm::mat4 &matrix);
+
+    GLuint GetUniformLocation(std::string_view name);
 
 public:
     GLuint program;
@@ -33,6 +38,7 @@ private:
     void Compile();
 
 private:
+    std::unordered_map<std::string_view, GLuint> locationCache;
     std::string *vertexPtr, *fragmentPtr;
 };
 #endif

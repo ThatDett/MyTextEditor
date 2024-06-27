@@ -14,6 +14,8 @@ set(FILE_SOURCES
     
 )
 
+set(CMAKE_CXX_STANDARD 20)
+
 add_executable(${PROJECT_NAME} ${FILE_SOURCES})
 
 add_subdirectory(external/glfw)

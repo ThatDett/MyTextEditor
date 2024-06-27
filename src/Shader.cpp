@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cassert>
 
+#include <gtc/type_ptr.hpp>
+
 #include "Shader.hpp"
 
 #define NOT_SET 100000 
@@ -134,17 +136,36 @@ void Shader::Use() const
     glUseProgram(program);
 }
 
-void Shader::SetUniform(std::string_view name, bool value) const
+void Shader::SetUniform(std::string_view name, bool value)
 {         
-    glUniform1i(glGetUniformLocation(program, name.data()), (int)value); 
+    glUniform1i(GetUniformLocation(name), (int)value); 
 }
 
-void Shader::SetUniform(std::string_view name, int value) const
+void Shader::SetUniform(std::string_view name, int value)
 { 
-    glUniform1i(glGetUniformLocation(program, name.data()), value); 
+    glUniform1i(GetUniformLocation(name), value); 
 }
 
-void Shader::SetUniform(std::string_view name, float value) const
+void Shader::SetUniform(std::string_view name, float value)
 { 
-    glUniform1f(glGetUniformLocation(program, name.data()), value); 
+    glUniform1f(GetUniformLocation(name), value); 
+}
+
+void Shader::SetMat4(std::string_view name, const glm::mat4 &matrix)
+{   
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix)); 
+}
+
+GLuint Shader::GetUniformLocation(std::string_view name)
+{
+    if (locationCache.find(name) != locationCache.end())
+        return locationCache[name];
+    
+    GLuint location = glGetUniformLocation(program, name.data());
+    if (location == -1)
+        std::cout << "Uniform " << name.data() << "doesn't exist" << std::endl;
+    else
+        locationCache[name] = location;
+        
+    return location;
 }

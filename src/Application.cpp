@@ -19,9 +19,72 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 } 
 
+float deltaTime = 0.0f;	
+float lastFrame = 0.0f; 
+ 
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+bool firstMouse = true;
+float yaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
+float lastX =  800.0f / 2.0;
+float lastY =  600.0 / 2.0;
+float fov   =  45.0f;
+
+void MouseCallback(GLFWwindow* window, double mouseXin, double mouseYin)
+{
+    float mouseX = static_cast<float>(mouseXin);
+    float mouseY = static_cast<float>(mouseYin);
+
+    if (firstMouse)
+    {
+        lastX = mouseX;
+        lastY = mouseY;
+        firstMouse = false;
+    }
+
+    float xoffset = mouseX - lastX;
+    float yoffset = lastY - mouseY; // reversed since y-coordinates go from bottom to top
+    lastX = mouseX;
+    lastY = mouseY;
+
+    float sensitivity = 0.1f; // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);  yoffset *= sensitivity;
+}
+
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    fov -= (float)yoffset * 2;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f; 
+}
+
 Application::Application() :
     windowSize{.width = 1366 / 2, .height = 768 / 2}
 {
+    lastX = windowSize.width / 2;
+    lastY = windowSize.height / 2;
+
     std::cout << "Execute\n";
 
     if (!glfwInit())
@@ -48,7 +111,14 @@ Application::Application() :
     }
 
     glViewport(0, 0, windowSize.width, windowSize.height);
-    glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);  
+    glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+    glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetScrollCallback(window, ScrollCallback);  
+
+    glEnable(GL_DEPTH_TEST);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
+
+    stbi_set_flip_vertically_on_load(true);
 }
 
 Application::~Application()
@@ -56,7 +126,7 @@ Application::~Application()
     std::cout << "Terminated\n";
     glfwTerminate();
 }
- 
+
 
 void Application::Run() const
 {
@@ -141,7 +211,8 @@ void Application::Run() const
     ibo.Bind();
     ibo.SendData();
 
-    const Shader shader("../src/shaders/shader.glsl");
+    //Should probably separate vertex and fragment shader into a separate file
+    Shader shader("../src/shaders/shader.glsl");
     shader.Use();
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -154,8 +225,6 @@ void Application::Run() const
     glEnableVertexAttribArray(2);
 
     //Texture
-    stbi_set_flip_vertically_on_load(true);
-
     unsigned int texture[2];
     glGenTextures(2, texture);  
 
@@ -199,44 +268,48 @@ void Application::Run() const
     shader.SetUniform("texture1", 0); 
     shader.SetUniform("texture2", 1); 
 
-    glEnable(GL_DEPTH_TEST);
+    //Camera
+
+    glm::mat4 view;
+    view = glm::lookAt(
+        glm::vec3(0.0f, 0.0f, 3.0f), 
+        glm::vec3(0.0f, 0.0f, 0.0f), 
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
 
     while (LOOP && !glfwWindowShouldClose(window))
     {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         ProcessInput(window);
     
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        // model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); 
 
-        glm::mat4 view = glm::mat4(1.0f);
-        // note that we're translating the scene in the reverse direction of where we want to move
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
-        view = glm::rotate(view, (float)glfwGetTime() * glm::radians(60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        const float radius = 10.0f;
+        float camX = sin(glfwGetTime()) * radius;
+        float camZ = cos(glfwGetTime()) * radius;
+        glm::mat4 view;
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         glm::mat4 projection;
-        projection = glm::perspective(glm::radians(50.0f), (float)windowSize.width / (float)windowSize.height, 0.1f, 100.0f);
-
-
-        int modelLoc = glGetUniformLocation(shader.program, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        
-        int viewLoc = glGetUniformLocation(shader.program, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        int projectionLoc = glGetUniformLocation(shader.program, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        projection = glm::perspective(glm::radians(fov), (float)windowSize.width / (float)windowSize.height, 0.1f, 100.0f);
+        shader.SetMat4("projection", projection);
+        shader.SetMat4("model", model);
+        shader.SetMat4("view", view);
 
         // glDrawElements(GL_TRIANGLES, ibo.Length(), GL_UNSIGNED_INT, 0);
-        for(unsigned int i = 0; i < 10; i++)
+        for(unsigned int i = 0; i < 10; ++i)
         {
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(cubePositions[i].x * sin(glfwGetTime()) * i, cubePositions[i].y * sin(glfwGetTime()) * i, cubePositions[i].z));
+            model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i; 
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+            shader.SetMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
@@ -256,6 +329,19 @@ void Application::ProcessInput(GLFWwindow *window) const
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    const float cameraSpeed = 4.0f * deltaTime; // adjust accordingly
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 void Application::Draw(GLuint numberOfElements) const
