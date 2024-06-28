@@ -10,6 +10,7 @@ set(FILE_SOURCES
     src/VertexBuffer.cpp
     src/IndexBuffer.cpp
     src/Camera.cpp
+    src/Window.cpp
     external/stb_image/stb_implementation.cpp
     #external/glad/glad/glad.c i dont need to compile everytime, just have the .o, but should include for others
     

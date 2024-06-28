@@ -1,13 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include "GLFW/glfw3.h"
-
-struct Dimensions
-{
-    int width;
-    int height;
-};
+#include "Window.hpp"
 
 class Application
 {
@@ -15,12 +9,11 @@ public:
     Application();
     ~Application();
 
-    void Run() const;
-    void ProcessInput(GLFWwindow *window) const;
+    void Run();
+    void ProcessInput();
     void Draw(GLuint numberOfElements) const;
+
 public:
-    Dimensions windowSize;
-    GLFWwindow *window;
 private:
 };
 #endif
