@@ -13,16 +13,18 @@
 #define NOT_SET 100000 
 
 Shader::Shader(std::string_view filepath) :
+    program(NOT_SET),
     vertexShader(glCreateShader(GL_VERTEX_SHADER)),
-    fragmentShader(glCreateShader(GL_FRAGMENT_SHADER)),
-    vertexSource("null"), fragmentSource("null"), program(NOT_SET)
+    fragmentShader(glCreateShader(GL_FRAGMENT_SHADER))
 {
+    std::cout << "Shader constructor" << std::endl;
     LoadFromFile(filepath);
     Compile();
 }
 
 void Shader::LoadFromFile(std::string_view filepath)
 {
+    std::cout << "LoadFromFile" << std::endl;
     std::ifstream file(filepath.data());
 
     if (file.fail()) 
@@ -76,12 +78,7 @@ void Shader::LoadFromFile(std::string_view filepath)
 
 void Shader::Compile()
 {
-    if (vertexSource == "null" || fragmentSource == "null")
-    {
-        std::cout << "Shader::Compile: Nothing to compile: vertex or fragment source is null \n";
-        exit(EXIT_FAILURE);
-    }
-
+    std::cout << "Shader::Compile" << std::endl;
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
 
@@ -161,11 +158,11 @@ GLuint Shader::GetUniformLocation(std::string_view name)
     if (locationCache.find(name) != locationCache.end())
         return locationCache[name];
     
-    GLuint location = glGetUniformLocation(program, name.data());
+    GLint location = glGetUniformLocation(program, name.data());
     if (location == -1)
         std::cout << "Uniform " << name.data() << "doesn't exist" << std::endl;
     else
         locationCache[name] = location;
-        
+
     return location;
 }

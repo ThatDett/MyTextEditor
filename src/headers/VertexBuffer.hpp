@@ -6,15 +6,19 @@
 class VertexBuffer
 {
 public:
+    VertexBuffer();
     VertexBuffer(GLfloat *data, size_t bufferSize);
     ~VertexBuffer();
 
-    void Bind() const;
-    void SendData(GLenum bufferMode = GL_STATIC_DRAW) const;    
-    void Unbind() const;
+    VertexBuffer& GenerateBuffer(GLfloat *data, size_t bufferSize);
+    VertexBuffer& Bind();
+    VertexBuffer& SendData(GLenum bufferMode = GL_STATIC_DRAW);    
+    VertexBuffer& Unbind();
 public:
-    GLfloat *data;
-    size_t bufferSize;
     GLuint ID;
+
+private:
+    GLfloat *m_data;
+    size_t m_bufferSize;
 };
 #endif
