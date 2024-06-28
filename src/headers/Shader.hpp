@@ -13,7 +13,10 @@ class Shader
 {
 public:
     Shader(std::string_view filepath);
+    Shader(const Shader &other);
     ~Shader();
+
+    Shader& operator =(Shader &other);
 
     void Use() const;
 
@@ -33,6 +36,8 @@ public:
 
     const char *vertexSource;
     const char *fragmentSource;
+
+    std::string filepath;
     
 private:
     void LoadFromFile(std::string_view filepath);
@@ -41,5 +46,8 @@ private:
 private:
     std::unordered_map<std::string_view, GLuint> locationCache;
     std::string *vertexPtr, *fragmentPtr;
+
+    //Keeps tracks of who is responsible of deleting the program
+    static std::unordered_map<unsigned int, unsigned int> ownershipCounter;
 };
 #endif

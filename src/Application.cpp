@@ -177,16 +177,7 @@ void Application::Run()
 {
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    Renderer renderer;
-
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window.width), 0.0f, static_cast<float>(window.height));
-
-    // VertexArray vao using these crashes for some reason;
-    // VertexBuffer vbo;
-
-    // Shader shader("../src/shaders/shader.glsl");
-    // shader.Use();
-    // shader.SetMat4("projection", projection);
+    Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/BaskervilleBT.ttf", 0, 24));
 
     Rectangle rect(glm::vec2(500.0f, 500.0f), 120, 200, glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -198,7 +189,7 @@ void Application::Run()
         // RenderText(shader, buffer, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         // RenderText(shader, "textcursor: " + std::to_string(textCursor), 25.0f, 700.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
-        renderer.DrawText("Test", glm::vec2(25.0f, 700.0f));
+        renderer.DrawText("Tesesfesgt", glm::vec2(300.0f), glm::vec4(1.0f), 1.0f);
 
         rect.Draw();
 

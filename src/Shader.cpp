@@ -12,19 +12,37 @@
 
 #define NOT_SET 100000 
 
+std::unordered_map<unsigned int, unsigned int> Shader::ownershipCounter;
+
 Shader::Shader(std::string_view filepath) :
     program(NOT_SET),
     vertexShader(glCreateShader(GL_VERTEX_SHADER)),
-    fragmentShader(glCreateShader(GL_FRAGMENT_SHADER))
+    fragmentShader(glCreateShader(GL_FRAGMENT_SHADER)),
+    filepath(filepath.data())
 {
-    std::cout << "Shader constructor" << std::endl;
     LoadFromFile(filepath);
     Compile();
+    ++ownershipCounter[program];
+}
+
+Shader::Shader(const Shader &other) :
+    program(other.program),
+    filepath(other.filepath),
+    vertexPtr(nullptr), 
+    fragmentPtr(nullptr)
+{++ownershipCounter[program];}
+
+Shader& Shader::operator =(Shader &other)
+{
+    program = other.program;
+    filepath = other.filepath;
+    ++ownershipCounter[program];
+    return *this;
 }
 
 void Shader::LoadFromFile(std::string_view filepath)
 {
-    std::cout << "LoadFromFile" << std::endl;
+    std::cout << "LoadFromFile: " << filepath << std::endl;
     std::ifstream file(filepath.data());
 
     if (file.fail()) 
@@ -78,7 +96,7 @@ void Shader::LoadFromFile(std::string_view filepath)
 
 void Shader::Compile()
 {
-    std::cout << "Shader::Compile" << std::endl;
+    // std::cout << "Shader::Compile"  << std::endl;
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
 
@@ -123,7 +141,14 @@ void Shader::Compile()
 
 Shader::~Shader()
 {
-    glDeleteProgram(program);
+    if (ownershipCounter[program] == 1)
+    {
+        glDeleteProgram(program);
+        std::cout << "delete shader program: " << program << " reference count: " << ownershipCounter[program] << std::endl;
+    }
+    else
+        --ownershipCounter[program];
+
     delete vertexPtr;
     delete fragmentPtr;
 }

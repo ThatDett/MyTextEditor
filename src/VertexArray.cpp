@@ -4,13 +4,13 @@
 
 VertexArray::VertexArray()
 {
-    std::cout << "Generating vertex array" << std::endl; 
+    // std::cout << "Generating vertex array" << std::endl; 
     glGenVertexArrays(1, &ID);
 }
 
 VertexArray::~VertexArray() 
 {
-    std::cout << "Delete vertex array" << std::endl; 
+    // std::cout << "Delete vertex array" << std::endl; 
     glDeleteVertexArrays(1, &ID); 
 }
 

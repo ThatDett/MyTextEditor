@@ -9,7 +9,9 @@ class Font
 {
 public:
     Font(const char *filepath, unsigned int width, unsigned int height);
+    Font(const Font &other);
 
-    std::unordered_map<char, Character> Characters;
+    std::unordered_map<char, Character> characters;
+    std::string filepath;
 };
 #endif

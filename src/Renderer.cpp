@@ -2,8 +2,8 @@
 
 #include "Renderer.hpp"
 
-Renderer::Renderer() :
-    shader("../src/shaders/shader.glsl"), font("../res/BaskervilleBT.ttf", 0, 24)
+Renderer::Renderer(const Shader &shader, const Font &font) :
+    shader(shader), font(font)
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -17,11 +17,10 @@ Renderer::Renderer() :
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-}
 
-Renderer::Renderer(const Shader &shader, const Font &font) :
-    shader(shader), font(font)
-{}
+    this->shader.Use();
+    this->shader.SetMat4("projection", glm::ortho(0.0f, 1366.0f, 0.0f, 768.0f));
+}
 
 Renderer& Renderer::DrawText(std::string_view text, glm::vec2 pos, const glm::vec4 &color, float scale)
 {
@@ -35,11 +34,12 @@ Renderer& Renderer::DrawText(std::string_view text, glm::vec2 pos, const glm::ve
     for (GLuint i = 0; c != text.end(); ++c, ++i)
     {
         DrawChar(*c, pos, color, scale);
-        pos.x += (font.Characters[*c].Advance.x >> 6) * scale;
+        pos.x += (font.characters[*c].Advance.x >> 6) * scale;
     }
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return *this;
 }
@@ -48,7 +48,7 @@ void Renderer::DrawChar(char c, glm::vec2 pos, const glm::vec4 &color, float sca
 {
     glUniform3f(glGetUniformLocation(shader.program, "textColor"), color.x, color.y, color.z);
     
-    Character &ch = font.Characters[c];
+    Character &ch = font.characters[c];
 
     float xpos = pos.x + ch.Bearing.x * scale;
     float ypos = pos.y - (ch.Size.y - ch.Bearing.y) * scale;
@@ -70,5 +70,4 @@ void Renderer::DrawChar(char c, glm::vec2 pos, const glm::vec4 &color, float sca
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     pos.x += (ch.Advance.x >> 6) * scale; 
-    glBindTexture(GL_TEXTURE_2D, 0);
 }

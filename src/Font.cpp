@@ -16,18 +16,15 @@ Font::Font(const char *filepath, unsigned int width, unsigned int height)
     FT_Face face;
     FontCheck(FT_New_Face(ft, filepath, 0, &face));
 
-    FT_Set_Pixel_Sizes(face, width, height);
+    FontCheck(FT_Set_Pixel_Sizes(face, width, height));
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
   
     for (unsigned char c = 0; c < 128; ++c)
     {
         // load character glyph 
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-        {
-            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
-            continue;
-        }
+        FontCheck(FT_Load_Char(face, c, FT_LOAD_RENDER))
+
         // generate texture
         unsigned int texture;
         glGenTextures(1, &texture);
@@ -55,9 +52,13 @@ Font::Font(const char *filepath, unsigned int width, unsigned int height)
             glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
             face->glyph->advance
         };
-        Characters.insert(std::pair<char, Character>(c, character));
+        characters.insert(std::pair<char, Character>(c, character));
     }
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 }
+
+Font::Font(const Font &other) :
+    characters(other.characters)
+{}
