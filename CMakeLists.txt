@@ -9,8 +9,10 @@ set(FILE_SOURCES
     src/VertexArray.cpp
     src/VertexBuffer.cpp
     src/IndexBuffer.cpp
-    src/Camera.cpp
     src/Window.cpp
+    src/Rectangle.cpp
+    src/Font.cpp
+    src/Renderer.cpp
     external/stb_image/stb_implementation.cpp
     #external/glad/glad/glad.c i dont need to compile everytime, just have the .o, but should include for others
     

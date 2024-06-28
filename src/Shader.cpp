@@ -143,6 +143,11 @@ void Shader::SetUniform(std::string_view name, int value)
     glUniform1i(GetUniformLocation(name), value); 
 }
 
+void Shader::SetUniform(std::string_view name, unsigned int value)
+{ 
+    glUniform1i(GetUniformLocation(name), value); 
+}
+
 void Shader::SetUniform(std::string_view name, float value)
 { 
     glUniform1f(GetUniformLocation(name), value); 
@@ -160,7 +165,7 @@ GLuint Shader::GetUniformLocation(std::string_view name)
     
     GLint location = glGetUniformLocation(program, name.data());
     if (location == -1)
-        std::cout << "Uniform " << name.data() << "doesn't exist" << std::endl;
+        std::cout << "Uniform " << name.data() << " doesn't exist" << std::endl;
     else
         locationCache[name] = location;
 

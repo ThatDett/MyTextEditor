@@ -9,16 +9,15 @@
 #include "stb_image.h"
 #include "glm.hpp"
 #include "ext/matrix_clip_space.hpp"
-#include "ft2build.h"
-#include FT_FREETYPE_H
 
 #include "Application.hpp"
 #include "Window.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
 #include "Shader.hpp"
+#include "Rectangle.hpp"
+#include "Renderer.hpp"
 
-#define FontCheck(x) if (x){std::cout << "ERROR::FREETYTPE: Failed to load Glyph. Line: " << __LINE__ << std::endl;exit(EXIT_FAILURE);}
 #define LOOP true
 
 GLenum glCheckError_(std::string_view file, int line)
@@ -44,6 +43,11 @@ GLenum glCheckError_(std::string_view file, int line)
 
 Window window("Text Editor", 1366, 768);
 
+GLuint textCursor = 0;
+GLuint buffersize = 0;
+constexpr GLuint BUFFER_MAX = 16;
+char buffer[BUFFER_MAX];
+
 void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -51,44 +55,59 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {
-    if(glfwGetKey(window.ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window.ptr, true);
-
-    if (glfwGetKey(window.ptr, GLFW_KEY_F11) == GLFW_RELEASE)
+    if (action == GLFW_PRESS)
     {
-        const GLFWvidmode *mode = glfwGetVideoMode(window.monitor);
+        switch (key)
+        {
+            case GLFW_KEY_ESCAPE:
+            {
+                glfwSetWindowShouldClose(window.ptr, true);
+            } break;
+            case GLFW_KEY_F11:
+            {
+                const GLFWvidmode *mode = glfwGetVideoMode(window.monitor);
 
-        glfwSetWindowMonitor(	
-            window.ptr,
-            window.fullscreen? NULL : window.monitor,
-            0, 30,
-            mode->width, mode->height, 
-            mode->refreshRate
-        );	
-        window.fullscreen = !window.fullscreen;
+                glfwSetWindowMonitor(	
+                    window.ptr,
+                    window.fullscreen? NULL : window.monitor,
+                    0, 30,
+                    mode->width, mode->height - 30, 
+                    mode->refreshRate
+                );	
+                window.fullscreen = !window.fullscreen;
+            } break;
+            case GLFW_KEY_LEFT:
+            {
+                if (textCursor > 0)
+                    --textCursor;
+            } break;
+            case GLFW_KEY_RIGHT:
+            {
+                if (textCursor < buffersize)
+                    ++textCursor;
+            } break;
+            case GLFW_KEY_BACKSPACE:
+            {
+                if (textCursor > 0 && buffersize > 0)
+                {
+                    buffer[textCursor] = '\0';
+                    --buffersize;
+                    --textCursor;
+                }   
+            } break;
+            default:
+            {
+                if (buffersize < BUFFER_MAX)
+                {
+                    buffer[textCursor] = key;
+                    ++buffersize;
+                    ++textCursor;
+                }
+            }
+        }
     }
-
-    if (glfwGetKey(window.ptr, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        
-    }
-
-    if (glfwGetKey(window.ptr, GLFW_KEY_S) == GLFW_PRESS)
-    {
-
-    }
+    // std::cout << key << std::endl;
 }
-
-struct Character 
-{
-    unsigned int TextureID;  // ID handle of the glyph texture
-    glm::ivec2   Size;       // Size of glyph
-    glm::ivec2   Bearing;    // Offset from baseline to left/top of glyph
-    FT_Vector_ Advance;    // Offset to advance to next glyph
-};
-
-std::unordered_map<char, Character> Characters;
-
 
 Application::Application()
 {
@@ -111,6 +130,7 @@ Application::~Application()
     glfwTerminate();
 }
 
+#if 0
 void RenderChar(Shader &s, unsigned char c, float x, float y, float scale, const glm::vec3 &color)
 {
     s.Use();
@@ -144,95 +164,43 @@ void RenderChar(Shader &s, unsigned char c, float x, float y, float scale, const
 
 void RenderText(Shader &s, std::string_view text, float x, float y, float scale, const glm::vec3 &color)
 {
-    for (char c : text)
+    std::string_view::const_iterator c = text.begin();
+    for (GLuint i = 0; c != text.end(); ++c, ++i)
     {
-        RenderChar(s, c, x, y, scale, color);
-        x += (Characters[c].Advance.x >> 6) * scale;
+        RenderChar(s, *c, x, y, scale, /*(i == textCursor)? glm::vec3(1.0f, 0.0f, 0.0f) : */color);
+        x += (Characters[*c].Advance.x >> 6) * scale;
     }
 }
+#endif
 
 void Application::Run()
 {
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    FT_Library ft;
-    FontCheck(FT_Init_FreeType(&ft));
-
-    FT_Face face;
-    FontCheck(FT_New_Face(ft, "../res/BaskervilleBT.ttf", 0, &face));
-
-    FT_Set_Pixel_Sizes(face, 0, 32);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
-  
-    for (unsigned char c = 0; c < 128; c++)
-    {
-        // load character glyph 
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-        {
-            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
-            continue;
-        }
-        // generate texture
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED,
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer
-        );
-        // set texture options
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // now store character for later use
-        Character character = {
-            texture, 
-            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            face->glyph->advance
-        };
-        Characters.insert(std::pair<char, Character>(c, character));
-    }
-
-    FT_Done_Face(face);
-    FT_Done_FreeType(ft);
+    Renderer renderer;
 
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window.width), 0.0f, static_cast<float>(window.height));
 
     // VertexArray vao using these crashes for some reason;
     // VertexBuffer vbo;
 
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
+    // Shader shader("../src/shaders/shader.glsl");
+    // shader.Use();
+    // shader.SetMat4("projection", projection);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-
-    Shader shader("../src/shaders/shader.glsl");
-    shader.Use();
-    shader.SetMat4("projection", projection);
+    Rectangle rect(glm::vec2(500.0f, 500.0f), 120, 200, glm::vec3(1.0f, 1.0f, 1.0f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
-        ProcessInput();
-    
         glClear(GL_COLOR_BUFFER_BIT);
 
-        RenderText(shader, "Hello, World!", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        // shader.Use();
+        // RenderText(shader, buffer, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        // RenderText(shader, "textcursor: " + std::to_string(textCursor), 25.0f, 700.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        renderer.DrawText("Test", glm::vec2(25.0f, 700.0f));
+
+        rect.Draw();
 
         glfwSwapBuffers(window.ptr);
         glfwPollEvents();
@@ -240,11 +208,6 @@ void Application::Run()
     
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-}
-
-void Application::ProcessInput()
-{
-    
 }
 
 void Application::Draw(GLuint numberOfElements) const

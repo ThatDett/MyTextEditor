@@ -6,19 +6,22 @@ IndexBuffer::IndexBuffer(GLuint *data, size_t bufferSize) :
     glGenBuffers(1, &ID);
 }
 
-void IndexBuffer::Bind() const
+IndexBuffer& IndexBuffer::Bind()
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
+    return *this;
 }
 
-void IndexBuffer::SendData(GLenum bufferMode /*= GL_STATIC_DRAW*/) const
+IndexBuffer& IndexBuffer::SendData(GLenum bufferMode /*= GL_STATIC_DRAW*/)
 {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, bufferSize, data, bufferMode);
+    return *this;
 }
 
-void IndexBuffer::Unbind() const
+IndexBuffer& IndexBuffer::Unbind()
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    return *this;
 }
 
 size_t IndexBuffer::Length() const

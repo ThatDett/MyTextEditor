@@ -19,6 +19,7 @@ public:
 
     void SetUniform(std::string_view name, bool value);
     void SetUniform(std::string_view name, int value);
+    void SetUniform(std::string_view name, unsigned int value);
     void SetUniform(std::string_view name, float value);
     void SetMat4(std::string_view name, const glm::mat4 &matrix);
 

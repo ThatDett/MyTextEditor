@@ -8,9 +8,9 @@ class IndexBuffer
 public:
     IndexBuffer(GLuint *data, size_t bufferSize);
 
-    void Bind() const;
-    void SendData(GLenum bufferMode = GL_STATIC_DRAW) const;
-    void Unbind() const;
+    IndexBuffer& Bind();
+    IndexBuffer& SendData(GLenum bufferMode = GL_STATIC_DRAW);
+    IndexBuffer& Unbind();
 
     size_t Length() const;
 

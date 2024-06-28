@@ -10,7 +10,6 @@ public:
     ~Application();
 
     void Run();
-    void ProcessInput();
     void Draw(GLuint numberOfElements) const;
 
 public:
