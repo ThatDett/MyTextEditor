@@ -22,7 +22,7 @@ Renderer::Renderer(const Shader &shader, const Font &font) :
     this->shader.SetMat4("projection", glm::ortho(0.0f, 1366.0f, 0.0f, 768.0f));
 }
 
-Renderer& Renderer::DrawText(std::string_view text, glm::vec2 pos, const glm::vec4 &color, float scale)
+Renderer& Renderer::DrawText(const std::string &text, glm::vec2 pos, const glm::vec4 &color, float scale)
 {
     glActiveTexture(GL_TEXTURE0);
 
@@ -30,7 +30,7 @@ Renderer& Renderer::DrawText(std::string_view text, glm::vec2 pos, const glm::ve
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     shader.Use();
 
-    std::string_view::const_iterator c = text.begin();
+    std::string::const_iterator c = text.begin();
     for (GLuint i = 0; c != text.end(); ++c, ++i)
     {
         DrawChar(*c, pos, color, scale);

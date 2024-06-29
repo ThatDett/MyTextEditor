@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <string_view>
+#include <string>
 
 #include "glm.hpp"
 
@@ -14,7 +14,7 @@ public:
     Renderer();
     Renderer(const Shader &shader, const Font &font);
 
-    Renderer& DrawText(std::string_view text, glm::vec2 pos, const glm::vec4 &color = glm::vec4(1.0f), float scale = 2);
+    Renderer& DrawText(const std::string &text, glm::vec2 pos, const glm::vec4 &color = glm::vec4(1.0f), float scale = 2);
 
 public:
     Shader shader;

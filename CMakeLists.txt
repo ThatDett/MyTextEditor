@@ -13,6 +13,9 @@ set(FILE_SOURCES
     src/Rectangle.cpp
     src/Font.cpp
     src/Renderer.cpp
+    src/TextCursor.cpp
+    src/Line.cpp
+    src/Editor.cpp
     external/stb_image/stb_implementation.cpp
     #external/glad/glad/glad.c i dont need to compile everytime, just have the .o, but should include for others
     
