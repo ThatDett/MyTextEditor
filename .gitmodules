@@ -4,6 +4,4 @@
 [submodule "external/FreeType"]
 	path = external/FreeType
 	url = https://github.com/freetype/freetype.git
-[submodule "external/SDL3"]
-	path = external/SDL3
-	url = https://github.com/libsdl-org/SDL.git
+

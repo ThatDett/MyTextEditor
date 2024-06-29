@@ -20,7 +20,7 @@ Font::Font(const char *filepath, unsigned int width, unsigned int height)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
   
-    for (unsigned char c = 0; c < 128; ++c)
+    for (unsigned char c = 0; c < 255; ++c)
     {
         // load character glyph 
         FontCheck(FT_Load_Char(face, c, FT_LOAD_RENDER))
