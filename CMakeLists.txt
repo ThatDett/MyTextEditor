@@ -19,7 +19,7 @@ set(FILE_SOURCES
 )
 
 set(CMAKE_CXX_STANDARD 20)
-set(DEBUG_BUILD 0)
+set(DEBUG_BUILD 1)
 
 # Define optimization flags based on build type
 if(${DEBUG_BUILD} EQUAL 1)
@@ -31,7 +31,6 @@ endif()
 configure_file (src/headers/CMakeVariables.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/headers/CMakeVariables.h @ONLY)
 add_executable(${PROJECT_NAME} ${FILE_SOURCES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
-
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/FreeType)

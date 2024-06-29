@@ -43,10 +43,10 @@ GLenum glCheckError_(std::string_view file, int line)
 
 Window window("Text Editor", 1366, 768);
 
-GLuint textCursor = 0;
+GLuint cursorIndex = 0;
 GLuint buffersize = 0;
 constexpr GLuint BUFFER_MAX = 16;
-char buffer[BUFFER_MAX];
+char buffer[BUFFER_MAX + 1];
 
 void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -54,7 +54,37 @@ void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 } 
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
-{
+{   
+    auto OnArrowMove = [](int direction)
+    {
+        if (direction == 1 && cursorIndex < buffersize)
+            ++cursorIndex;
+        else if (direction == -1 && cursorIndex > 0)
+            --cursorIndex;
+    };
+
+    auto OnBackspace = []()
+    {
+        if (cursorIndex > 0 && buffersize > 0)
+        {
+            buffer[cursorIndex - 1] = 0;
+            --buffersize;
+            --cursorIndex;
+        }   
+    };
+
+    auto OnCharInput = [key, mods]()
+    {
+        int capsState = glfwGetKey(window.ptr, GLFW_KEY_CAPS_LOCK);
+        if (key > 128) return;
+        if (buffersize < BUFFER_MAX)
+        {
+            buffer[cursorIndex] = mods? key : std::tolower(key);
+            ++buffersize;
+            ++cursorIndex;
+        }
+    };
+
     if (action == GLFW_PRESS)
     {
         switch (key)
@@ -76,37 +106,65 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
                 );	
                 window.fullscreen = !window.fullscreen;
             } break;
+            case GLFW_KEY_ENTER:
+            {
+                // for (unsigned int i = 0; i < BUFFER_MAX; ++i)
+                // {
+                //     std::cout << buffer[i];
+                // }
+                // std::cout << std::endl;
+            } break;
             case GLFW_KEY_LEFT:
             {
-                if (textCursor > 0)
-                    --textCursor;
+                OnArrowMove(-1);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                if (textCursor < buffersize)
-                    ++textCursor;
+                OnArrowMove(1);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
-                if (textCursor > 0 && buffersize > 0)
-                {
-                    buffer[textCursor] = '\0';
-                    --buffersize;
-                    --textCursor;
-                }   
+                OnBackspace();
             } break;
             default:
-            {
-                if (buffersize < BUFFER_MAX)
-                {
-                    buffer[textCursor] = key;
-                    ++buffersize;
-                    ++textCursor;
-                }
+            {   
+                OnCharInput();
             }
         }
     }
-    // std::cout << key << std::endl;
+    else if (action == GLFW_REPEAT)
+    {
+        switch (key)
+        {   
+            case GLFW_KEY_LEFT:
+            {
+                OnArrowMove(-1);
+            } break;
+            case GLFW_KEY_RIGHT:
+            {
+                OnArrowMove(1);
+            } break;
+            case GLFW_KEY_BACKSPACE:
+            {
+                OnBackspace();  
+            } break;
+            default:
+            {
+                OnCharInput();
+            }
+        }
+    }
+    else {}
+}
+
+void CharInputCallback(GLFWwindow *window, unsigned int codepoint)
+{
+    if (buffersize < BUFFER_MAX)
+    {
+        buffer[cursorIndex] = codepoint;
+        ++buffersize;
+        cursorIndex = buffersize;
+    }
 }
 
 Application::Application()
@@ -117,6 +175,9 @@ Application::Application()
 
     glfwSetFramebufferSizeCallback(window.ptr, FramebufferSizeCallback);
     glfwSetKeyCallback(window.ptr, KeyboardInputCallback);
+    // glfwSetCharCallback(window.ptr, CharInputCallback);
+
+    glfwSetInputMode(window.ptr, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -130,79 +191,34 @@ Application::~Application()
     glfwTerminate();
 }
 
-#if 0
-void RenderChar(Shader &s, unsigned char c, float x, float y, float scale, const glm::vec3 &color)
-{
-    s.Use();
-    glUniform3f(glGetUniformLocation(s.program, "textColor"), color.x, color.y, color.z);
-    glActiveTexture(GL_TEXTURE0);
-    
-    Character &ch = Characters[c];
-
-    float xpos = x + ch.Bearing.x * scale;
-    float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-    float w = ch.Size.x * scale;
-    float h = ch.Size.y * scale;
-
-    float vertices[6][4] = {
-        { xpos,     ypos + h,   0.0f, 0.0f },            
-        { xpos,     ypos,       0.0f, 1.0f },
-        { xpos + w, ypos,       1.0f, 1.0f },
-        { xpos,     ypos + h,   0.0f, 0.0f },
-        { xpos + w, ypos,       1.0f, 1.0f },
-        { xpos + w, ypos + h,   1.0f, 0.0f }           
-    };
-
-    glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    x += (ch.Advance.x >> 6) * scale; 
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void RenderText(Shader &s, std::string_view text, float x, float y, float scale, const glm::vec3 &color)
-{
-    std::string_view::const_iterator c = text.begin();
-    for (GLuint i = 0; c != text.end(); ++c, ++i)
-    {
-        RenderChar(s, *c, x, y, scale, /*(i == textCursor)? glm::vec3(1.0f, 0.0f, 0.0f) : */color);
-        x += (Characters[*c].Advance.x >> 6) * scale;
-    }
-}
-#endif
-
 void Application::Run()
 {
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
     Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/BaskervilleBT.ttf", 0, 24));
 
-    Rectangle rect(glm::vec2(500.0f, 500.0f), 120, 200, glm::vec3(1.0f, 1.0f, 1.0f));
+    Rectangle cursor(glm::vec2(200.0f, 20.0f), 1, 20, glm::vec3(1.0f, 1.0f, 1.0f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // shader.Use();
-        // RenderText(shader, buffer, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        // RenderText(shader, "textcursor: " + std::to_string(textCursor), 25.0f, 700.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        renderer.DrawText(buffer, glm::vec2(20.0f, 730.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("bufferSize: " + std::to_string(buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("cursorIndex: " + std::to_string(cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
 
-        renderer.DrawText("Tesesfesgt", glm::vec2(300.0f), glm::vec4(1.0f), 1.0f);
+        float testpos = 0;
 
-        rect.Draw();
+        //<= ?
+        for (unsigned int i = 0; i < cursorIndex; ++i)
+        {
+            testpos += renderer.font.characters[buffer[i]].Advance.x >> 6;
+        }
+
+        cursor.pos = glm::vec2(20.0f + testpos, 20.0f);
+        cursor.Draw();
 
         glfwSwapBuffers(window.ptr);
-        glfwPollEvents();
+        glfwWaitEventsTimeout(0.5);
     }
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-void Application::Draw(GLuint numberOfElements) const
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawElements(GL_TRIANGLES, numberOfElements, GL_UNSIGNED_INT, 0);
 }

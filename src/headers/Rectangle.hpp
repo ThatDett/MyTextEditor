@@ -16,6 +16,7 @@ public:
     void Draw();
 public:
     glm::vec2 pos;
+    glm::vec2 lastpos;
     glm::vec3 color;
 private:
     GLuint m_width;

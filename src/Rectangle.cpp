@@ -32,10 +32,8 @@ Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color
 
     rectShader.SetMat4("u_model", model);
 
-    // rectShader.SetUniform("u_width", m_width);
-    // rectShader.SetUniform("u_height", m_height);
-
     vbo.Unbind();
+    ibo.Unbind();
     vao.Unbind();
 }
 
@@ -46,6 +44,16 @@ void Rectangle::Draw()
     ibo.Bind();
 
     rectShader.Use();
+
+    if (lastpos != pos)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pos.x, pos.y, 0.0f));
+        model = glm::scale(model, glm::vec3((float)m_width, (float)m_height, 1.0f));
+
+        rectShader.SetMat4("u_model", model);
+        lastpos = pos;
+    }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

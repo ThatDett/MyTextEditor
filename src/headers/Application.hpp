@@ -10,8 +10,7 @@ public:
     ~Application();
 
     void Run();
-    void Draw(GLuint numberOfElements) const;
-
+    
 public:
 private:
 };
