@@ -43,45 +43,112 @@ GLenum glCheckError_(std::string_view file, int line)
 
 Window window("Text Editor", 1366, 768);
 
-GLuint cursorIndex = 0;
-GLuint buffersize = 0;
-constexpr GLuint BUFFER_MAX = 16;
-char buffer[BUFFER_MAX + 1];
+constexpr GLuint BUFFER_MAX = 48;
 
-void FramebufferSizeCallback(GLFWwindow *window, int width, int height)
+struct TextCursor
+{
+    unsigned int hIndex = 0;
+    unsigned int vIndex = 0;
+};
+
+struct Line 
+{
+    GLuint cursorIndex = 0;
+    GLuint buffersize = 0;
+    char buffer[BUFFER_MAX];
+};
+
+struct Editor
+{
+    size_t size;
+    Line lines[8];
+};
+
+TextCursor textCursor;
+Editor editor{.size = sizeof(editor.lines) / sizeof(Line)};
+
+void FramebuffersizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 } 
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
+    enum Direction
+    {
+        RIGHT,
+        LEFT,
+        UP,
+        DOWN
+    };
+
     auto OnArrowMove = [](int direction)
     {
-        if (direction == 1 && cursorIndex < buffersize)
-            ++cursorIndex;
-        else if (direction == -1 && cursorIndex > 0)
-            --cursorIndex;
+        switch (direction)
+        {
+            case Direction::LEFT:
+            {
+                if (textCursor.hIndex > 0)
+                {
+                    --textCursor.hIndex;
+                    editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+                }
+            } break;
+            case Direction::RIGHT:
+            {
+                if (textCursor.hIndex < editor.lines[textCursor.vIndex].buffersize)
+                {
+                    ++textCursor.hIndex;
+                    editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+                }
+            } break;
+            case Direction::UP:
+            {
+                if (textCursor.vIndex > 0)
+                {
+                   --textCursor.vIndex;
+                   textCursor.hIndex = editor.lines[textCursor.vIndex].cursorIndex;
+                }
+            } break;
+            case Direction::DOWN:
+            {
+                if (textCursor.vIndex < editor.size - 1)
+                {
+                    ++textCursor.vIndex;
+                    textCursor.hIndex = editor.lines[textCursor.vIndex].cursorIndex;
+                }
+            } break;
+        }
     };
 
     auto OnBackspace = []()
     {
-        if (cursorIndex > 0 && buffersize > 0)
+        if (textCursor.hIndex > 0)
         {
-            buffer[cursorIndex - 1] = 0;
-            --buffersize;
-            --cursorIndex;
-        }   
-    };
-
-    auto OnCharInput = [key, mods]()
-    {
-        int capsState = glfwGetKey(window.ptr, GLFW_KEY_CAPS_LOCK);
-        if (key > 128) return;
-        if (buffersize < BUFFER_MAX)
+            if (editor.lines[textCursor.vIndex].buffersize > 0)
+            {
+                if (textCursor.hIndex == editor.lines[textCursor.vIndex].buffersize)
+                {
+                    editor.lines[textCursor.vIndex].buffer[textCursor.hIndex - 1] = 0;
+                }
+                else
+                {
+                    memmove(editor.lines[textCursor.vIndex].buffer + textCursor.hIndex - 1, editor.lines[textCursor.vIndex].buffer + textCursor.hIndex, editor.lines[textCursor.vIndex].buffersize - textCursor.hIndex);
+                    editor.lines[textCursor.vIndex].buffer[editor.lines[textCursor.vIndex].buffersize - 1] = 0;
+                }
+                --editor.lines[textCursor.vIndex].buffersize;
+                --textCursor.hIndex;
+                --editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+            }   
+        }
+        else
         {
-            buffer[cursorIndex] = mods? key : std::tolower(key);
-            ++buffersize;
-            ++cursorIndex;
+            if (textCursor.vIndex > 0)
+            {
+                --textCursor.vIndex;
+                textCursor.hIndex = editor.lines[textCursor.vIndex].buffersize;
+                editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+            }
         }
     };
 
@@ -108,19 +175,22 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_ENTER:
             {
-                // for (unsigned int i = 0; i < BUFFER_MAX; ++i)
-                // {
-                //     std::cout << buffer[i];
-                // }
-                // std::cout << std::endl;
             } break;
             case GLFW_KEY_LEFT:
             {
-                OnArrowMove(-1);
+                OnArrowMove(Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                OnArrowMove(1);
+                OnArrowMove(Direction::RIGHT);
+            } break;
+            case GLFW_KEY_UP:
+            {
+                OnArrowMove(Direction::UP);
+            } break;
+            case GLFW_KEY_DOWN:
+            {
+                OnArrowMove(Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
@@ -128,7 +198,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             default:
             {   
-                OnCharInput();
+                // OnCharInput();
             }
         }
     }
@@ -138,11 +208,19 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
         {   
             case GLFW_KEY_LEFT:
             {
-                OnArrowMove(-1);
+                OnArrowMove(Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                OnArrowMove(1);
+                OnArrowMove(Direction::RIGHT);
+            } break;
+            case GLFW_KEY_UP:
+            {
+                OnArrowMove(Direction::UP);
+            } break;
+            case GLFW_KEY_DOWN:
+            {
+                OnArrowMove(Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
@@ -150,7 +228,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             default:
             {
-                OnCharInput();
+                // OnCharInput();
             }
         }
     }
@@ -159,11 +237,23 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
 
 void CharInputCallback(GLFWwindow *window, unsigned int codepoint)
 {
-    if (buffersize < BUFFER_MAX)
+    if (editor.lines[textCursor.vIndex].buffersize < BUFFER_MAX - 1)
     {
-        buffer[cursorIndex] = codepoint;
-        ++buffersize;
-        cursorIndex = buffersize;
+        if (textCursor.hIndex == editor.lines[textCursor.vIndex].buffersize)
+        {
+            editor.lines[textCursor.vIndex].buffer[textCursor.hIndex] = codepoint;
+            ++editor.lines[textCursor.vIndex].buffersize;
+            ++textCursor.hIndex;
+            editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+        }
+        else
+        {
+            memmove(&editor.lines[textCursor.vIndex].buffer[textCursor.hIndex + 1], &editor.lines[textCursor.vIndex].buffer[textCursor.hIndex], editor.lines[textCursor.vIndex].buffersize - textCursor.hIndex);
+            editor.lines[textCursor.vIndex].buffer[textCursor.hIndex] = codepoint;
+            ++editor.lines[textCursor.vIndex].buffersize;
+            ++textCursor.hIndex;
+            editor.lines[textCursor.vIndex].cursorIndex = textCursor.hIndex;
+        }
     }
 }
 
@@ -173,9 +263,9 @@ Application::Application()
 
     glViewport(0, 0, window.width, window.height);
 
-    glfwSetFramebufferSizeCallback(window.ptr, FramebufferSizeCallback);
+    glfwSetFramebufferSizeCallback(window.ptr, FramebuffersizeCallback);
     glfwSetKeyCallback(window.ptr, KeyboardInputCallback);
-    // glfwSetCharCallback(window.ptr, CharInputCallback);
+    glfwSetCharCallback(window.ptr, CharInputCallback);
 
     glfwSetInputMode(window.ptr, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
@@ -197,25 +287,35 @@ void Application::Run()
 
     Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/BaskervilleBT.ttf", 0, 24));
 
-    Rectangle cursor(glm::vec2(200.0f, 20.0f), 1, 20, glm::vec3(1.0f, 1.0f, 1.0f));
+    Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec3(1.0f, 1.0f, 1.0f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        renderer.DrawText(buffer, glm::vec2(20.0f, 730.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("bufferSize: " + std::to_string(buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("cursorIndex: " + std::to_string(cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
+        for (uint32_t i = 0; i < editor.size; ++i)
+            renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * 22.0f)), glm::vec4(1.0f), 1.0f);
 
-        float testpos = 0;
+        renderer.DrawText("current line buffersize: " + std::to_string(editor.lines[textCursor.vIndex].buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("current line cursorIndex: " + std::to_string(editor.lines[textCursor.vIndex].cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("textCursor.hIndex: " + std::to_string(textCursor.hIndex), glm::vec2(1000.0f, 690.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("textCursor.vIndex: " + std::to_string(textCursor.vIndex), glm::vec2(1000.0f, 670.0f), glm::vec4(1.0f), 1.0f);
+
+        float xpos = 0;
+        float ypos = 0;
 
         //<= ?
-        for (unsigned int i = 0; i < cursorIndex; ++i)
+        for (unsigned int i = 0; i < textCursor.hIndex; ++i)
         {
-            testpos += renderer.font.characters[buffer[i]].Advance.x >> 6;
+            xpos += renderer.font.characters[editor.lines[textCursor.vIndex].buffer[i]].Advance.x >> 6;
         }
 
-        cursor.pos = glm::vec2(20.0f + testpos, 20.0f);
+        for (unsigned int i = 1; i < textCursor.vIndex + 1; ++i)
+        {
+            ypos = i * 22.0f;
+        }
+
+        cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
         cursor.Draw();
 
         glfwSwapBuffers(window.ptr);
