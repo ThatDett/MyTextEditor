@@ -10,6 +10,13 @@ float rectVertices[] =
 
 GLuint indices[] = {0, 1, 2, 2, 3, 0};
 
+Rectangle::Rectangle() :
+    vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
+    rectShader("../src/shaders/rectangle.glsl")
+{
+
+}
+
 Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color) :
     pos(pos), color(color), m_width(width), m_height(height),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),

@@ -1,9 +1,18 @@
+#include <cstring>
+
 #include "Line.hpp"
 
 Line::Line(unsigned int bufferSize) :
-    buffer(bufferSize, '\0'), m_bufferSize(bufferSize),
+    buffer(new char[bufferSize]), m_bufferSize(bufferSize),
     m_bufferCapacity(bufferSize)
-{}
+{
+    memset(buffer, 0, bufferSize);
+}
+
+Line::~Line()
+{
+    delete[] buffer;
+}
 
 char& Line::CharAtIndex()
 {

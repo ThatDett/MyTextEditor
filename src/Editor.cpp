@@ -1,9 +1,15 @@
 #include "Editor.hpp"
 
-Editor::Editor(uint32_t NumberOfLines) :
-    lines(NumberOfLines), m_size(NumberOfLines),
-    m_capacity(NumberOfLines)
+Editor::Editor(uint32_t numberOfLines) :
+    lines(new Line[numberOfLines]), 
+    m_size(numberOfLines),
+    m_capacity(numberOfLines)
 {}
+
+Editor::~Editor()
+{
+    delete[] lines;
+}
 
 Line& Editor::CurrentLine()
 {

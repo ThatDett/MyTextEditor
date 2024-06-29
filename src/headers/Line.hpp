@@ -6,14 +6,15 @@
 class Line
 {
 public:
-    Line(unsigned int bufferCapacity = 256);
+    Line(unsigned int bufferSize = 256);
+    ~Line();
 
     char& CharAtIndex();
     char& CharAtIndex(int offset);
     unsigned int Size();
     unsigned int Capacity();
 public:
-    std::vector<char> buffer;
+    char *buffer;
     unsigned int cursorIndex = 0;
     unsigned int buffersize = 0;
 private:

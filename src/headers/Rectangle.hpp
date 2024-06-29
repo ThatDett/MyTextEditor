@@ -11,6 +11,7 @@
 class Rectangle
 {
 public:
+    Rectangle();
     Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color);
 
     void Draw();

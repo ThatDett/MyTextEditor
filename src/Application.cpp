@@ -134,6 +134,15 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
         }
     };
 
+    auto OnEnter = []()
+    {
+        // memmove(
+        //     &editor.CurrentLine() + 1,
+        //     &editor.CurrentLine(),
+        //     (editor.NumberOfLines() - editor.textCursor.vIndex) * sizeof(Line)
+        // );
+    };
+
     if (action == GLFW_PRESS)
     {
         switch (key)
@@ -155,6 +164,10 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
                 );	
                 window.fullscreen = !window.fullscreen;
             } break;
+            case GLFW_KEY_ENTER:
+            {
+                OnEnter();
+            } break;
             case GLFW_KEY_LEFT:
             {
                 OnArrowMove(Direction::LEFT);
@@ -167,7 +180,6 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             {
                 OnArrowMove(Direction::UP);
             } break;
-            case GLFW_KEY_ENTER:
             case GLFW_KEY_DOWN:
             {
                 OnArrowMove(Direction::DOWN);
@@ -176,10 +188,6 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             {
                 OnBackspace();
             } break;
-            default:
-            {   
-                // OnCharInput();
-            }
         }
     }
     else if (action == GLFW_REPEAT)
@@ -206,10 +214,6 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             {
                 OnBackspace();  
             } break;
-            default:
-            {
-                // OnCharInput();
-            }
         }
     }
     else {}
@@ -278,7 +282,7 @@ void Application::Run()
         glClear(GL_COLOR_BUFFER_BIT);
 
         for (uint32_t i = 0; i < editor.NumberOfLines(); ++i)
-            renderer.DrawText(editor.lines[i].buffer.data(), glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
+            renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
 
         renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
