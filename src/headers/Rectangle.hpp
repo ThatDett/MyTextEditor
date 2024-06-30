@@ -12,7 +12,7 @@ class Rectangle
 {
 public:
     Rectangle();
-    Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color);
+    Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec4 color = glm::vec4(1.0f));
 
     void Draw();
 public:

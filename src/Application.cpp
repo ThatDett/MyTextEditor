@@ -42,8 +42,10 @@ GLenum glCheckError_(std::string_view file, int line)
 
 #define GLCheck(x) x; glCheckError_(__FILE__, __LINE__) 
 
+Font fonts[1][16];
+
 Window window("Text Editor");
-Editor editor(23);
+Editor editor(Font("../res/Consolas.ttf", 0, 24), 32);
 
 void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
 {
@@ -51,6 +53,8 @@ void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
     window.width = width; 
     window.height = height; 
 } 
+
+unsigned int fontIndex = 0;
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
@@ -61,6 +65,16 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             case GLFW_KEY_ESCAPE:
             {
                 glfwSetWindowShouldClose(window.ptr, true);
+            } break;
+            case GLFW_KEY_F8:
+            {
+                if (fontIndex > 0)
+                    --fontIndex;
+            } break;
+            case GLFW_KEY_F9:
+            {
+                if (fontIndex < 11)
+                    ++fontIndex;
             } break;
             case GLFW_KEY_F11:
             {
@@ -153,6 +167,12 @@ Application::Application()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     stbi_set_flip_vertically_on_load(true);
+
+    for (unsigned int i = 0; i < 16; ++i)
+    {
+        fonts[0][i].filepath = "../res/Consolas.ttf";
+        fonts[0][i].LoadFont(0, 20 + (i * (4 + i / 3)));
+    }
 }
 
 Application::~Application()
@@ -165,28 +185,29 @@ void Application::Run()
 {
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/Consolas.ttf", 0, 24));
+    Renderer renderer(Shader("../src/shaders/font.glsl"), editor.font);
 
-    Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec3(1.0f, 1.0f, 1.0f));
-    Rectangle bottomBar(glm::vec2(0, window.height - 32.0), window.width, 32, glm::vec3(0.01f, 0.04f, 0.07f));
+    Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    Rectangle bottomBar(glm::vec2(0, window.height - 36), window.width, 36, glm::vec4(0.0f, 0.02f, 0.04f, 1.0f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
+        renderer.font = &fonts[0][fontIndex];
         glClear(GL_COLOR_BUFFER_BIT);
 
         for (uint32_t i = 0; i < 45; ++i)
         {
-           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
+           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * editor.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
         }
 
         renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().Size()), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.hIndex: " + std::to_string(editor.textCursor.hIndex), glm::vec2(1000.0f, 690.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.vIndex: " + std::to_string(editor.textCursor.vIndex), glm::vec2(1000.0f, 670.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("editor.size: " + std::to_string(editor.m_size), glm::vec2(1000.0f, 650.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("editor.size: " + std::to_string(editor.NumberOfLines()), glm::vec2(1000.0f, 650.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.capacity: " + std::to_string(editor.Capacity()), glm::vec2(1000.0f, 630.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("editor.NumberOfLines" + std::to_string(editor.NumberOfLines()), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("canInsertNewLine: " + std::to_string(editor.Capacity() - editor.NumberOfLines() > 0), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("canInsertNewLine: " + std::to_string(editor.Capacity() - editor.NumberOfLines() > 0), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("fullscreen: " + std::to_string(window.fullscreen), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
         float ypos = 0;
@@ -194,12 +215,12 @@ void Application::Run()
         //<= ?
         for (unsigned int i = 0; i < editor.textCursor.hIndex; ++i)
         {
-            xpos += renderer.font.characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
+            xpos += renderer.font->characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
         }
 
         for (unsigned int i = 1; i < editor.textCursor.vIndex + 1; ++i)
         {
-            ypos = i * renderer.font.Height() + 4;
+            ypos = i * renderer.font->Height() + 4;
         }
 
         cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
@@ -207,6 +228,6 @@ void Application::Run()
         bottomBar.Draw();
 
         glfwSwapBuffers(window.ptr);
-        glfwWaitEventsTimeout(0.5);
+        glfwWaitEventsTimeout(1);
     }
 }

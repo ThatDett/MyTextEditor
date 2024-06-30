@@ -4,8 +4,6 @@ layout (location = 0) in vec3 aPos;
 
 uniform mat4 u_projection;
 uniform mat4 u_model;
-uniform int u_width;
-uniform int u_height;
 
 void main()
 {
@@ -16,7 +14,10 @@ void main()
 //#shader fragment
 out vec4 color;
 
+uniform vec4 u_color;
+
 void main()
 {    
-    color = vec4(1.0);
+    color = u_color;
+    // color = vec4(1.0f);
 } 

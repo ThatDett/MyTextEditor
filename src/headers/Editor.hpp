@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include "Font.hpp"
 #include "TextCursor.hpp"
 #include "Line.hpp"
 
@@ -17,7 +18,7 @@ enum Direction
 class Editor
 {
 public:
-    Editor(uint32_t numberOfLines);
+    Editor(const Font &font, uint32_t numberOfLines = 256);
     ~Editor();
 
     void InsertChar(int codepoint);
@@ -31,10 +32,12 @@ public:
     unsigned int NumberOfLines();
     unsigned int Capacity();
 public:
+    Font font;
     TextCursor textCursor;
     Line *lines;
-    uint64_t m_size;
 private:
+
+    uint64_t m_size;
     uint64_t m_capacity;
 private:
 };

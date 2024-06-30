@@ -2,7 +2,8 @@
 
 #include "Editor.hpp"
 
-Editor::Editor(uint32_t numberOfLines) :
+Editor::Editor(const Font &font, uint32_t numberOfLines) :
+    font(font),
     lines(new Line[numberOfLines * 2]), 
     m_size(numberOfLines),
     m_capacity(numberOfLines * 2)
@@ -123,10 +124,13 @@ void Editor::NewLine()
     for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; 
         i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
     {
+        memset(ptr[1].buffer, 0, ptr[1].Size());
+
         if (ptr->Size() > 0)
-             memcpy(ptr[1].buffer, ptr->buffer, ptr->Size());
-        else
-            memset(ptr[1].buffer, 0, ptr[1].Size());
+        {
+            memcpy(ptr[1].buffer, ptr->buffer, ptr->Size());
+        }
+        
         ptr[1].m_bufferSize = ptr->Size();
         ptr[1].cursorIndex = ptr->cursorIndex;
     }

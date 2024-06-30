@@ -2,8 +2,8 @@
 
 #include "Renderer.hpp"
 
-Renderer::Renderer(const Shader &shader, const Font &font) :
-    shader(shader), font(font)
+Renderer::Renderer(const Shader &shader, Font &font) :
+    shader(shader), font(&font)
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -34,7 +34,7 @@ Renderer& Renderer::DrawText(const std::string &text, glm::vec2 pos, const glm::
     for (GLuint i = 0; c != text.end(); ++c, ++i)
     {
         DrawChar(*c, pos, color, scale);
-        pos.x += (font.characters[*c].Advance.x >> 6) * scale;
+        pos.x += (font->characters[*c].Advance.x >> 6) * scale;
     }
 
     glBindVertexArray(0);
@@ -48,7 +48,7 @@ void Renderer::DrawChar(char c, glm::vec2 pos, const glm::vec4 &color, float sca
 {
     glUniform3f(glGetUniformLocation(shader.program, "textColor"), color.x, color.y, color.z);
     
-    Character &ch = font.characters[c];
+    Character &ch = font->characters[c];
 
     float xpos = pos.x + ch.Bearing.x * scale;
     float ypos = pos.y - (ch.Size.y - ch.Bearing.y) * scale;

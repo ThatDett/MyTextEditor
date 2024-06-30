@@ -178,6 +178,11 @@ void Shader::SetUniform(std::string_view name, float value)
     glUniform1f(GetUniformLocation(name), value); 
 }
 
+void Shader::SetVec4(std::string_view name, float x, float y, float z ,float w)
+{
+    glUniform4f(GetUniformLocation(name), x, y, z, w);
+}
+
 void Shader::SetMat4(std::string_view name, const glm::mat4 &matrix)
 {   
     glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix)); 

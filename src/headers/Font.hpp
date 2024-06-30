@@ -8,8 +8,11 @@
 class Font
 {
 public:
+    Font();
     Font(const char *filepath, unsigned int width, unsigned int height);
     Font(const Font &other);
+
+    void LoadFont(unsigned int width, unsigned int height);
 
     unsigned int Height();
 public:

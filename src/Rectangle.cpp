@@ -17,7 +17,7 @@ Rectangle::Rectangle() :
 
 }
 
-Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color) :
+Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec4 color) :
     pos(pos), color(color), m_width(width), m_height(height),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
     rectShader("../src/shaders/rectangle.glsl")
@@ -38,6 +38,7 @@ Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec3 color
     model = glm::scale(model, glm::vec3((float)m_width, (float)m_height, 1.0f));
 
     rectShader.SetMat4("u_model", model);
+    rectShader.SetVec4("u_color", color.x, color.y, color.z, color.w);
 
     vbo.Unbind();
     ibo.Unbind();

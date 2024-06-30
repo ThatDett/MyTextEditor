@@ -24,6 +24,11 @@ public:
     void SetUniform(std::string_view name, int value);
     void SetUniform(std::string_view name, unsigned int value);
     void SetUniform(std::string_view name, float value);
+
+    void SetVec2(std::string_view name, glm::vec2 value);
+    void SetVec3(std::string_view name, glm::vec3 value);
+    void SetVec4(std::string_view name, float x, float y, float z, float w);
+
     void SetMat4(std::string_view name, const glm::mat4 &matrix);
 
     GLuint GetUniformLocation(std::string_view name);

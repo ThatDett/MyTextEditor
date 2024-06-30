@@ -12,13 +12,13 @@ class Renderer
 {
 public:
     Renderer();
-    Renderer(const Shader &shader, const Font &font);
+    Renderer(const Shader &shader, Font &font);
 
     Renderer& DrawText(const std::string &text, glm::vec2 pos, const glm::vec4 &color = glm::vec4(1.0f), float scale = 2);
 
 public:
     Shader shader;
-    Font font;
+    Font *font;
 
     GLuint VAO;
     GLuint VBO;

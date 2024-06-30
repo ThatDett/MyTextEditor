@@ -8,14 +8,26 @@
 
 #define FontCheck(x) if (x){std::cout << "ERROR::FREETYTPE: Failed to load Glyph. Line: " << __LINE__ << " File: " << __FILE__ << std::endl;exit(EXIT_FAILURE);}
 
+Font::Font() {};
+
 Font::Font(const char *filepath, unsigned int width, unsigned int height) :
     filepath(filepath), m_height(height)
+{
+    LoadFont(width, height);
+}
+
+Font::Font(const Font &other) :
+    filepath(other.filepath), characters(other.characters), 
+    m_height(other.m_height)
+{}
+
+void Font::LoadFont(unsigned int width, unsigned int height)
 {
     FT_Library ft;
     FontCheck(FT_Init_FreeType(&ft));
 
     FT_Face face;
-    FontCheck(FT_New_Face(ft, filepath, 0, &face));
+    FontCheck(FT_New_Face(ft, filepath.c_str(), 0, &face));
 
     FontCheck(FT_Set_Pixel_Sizes(face, width, height));
 
@@ -59,11 +71,6 @@ Font::Font(const char *filepath, unsigned int width, unsigned int height) :
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 }
-
-Font::Font(const Font &other) :
-    filepath(other.filepath), characters(other.characters), 
-    m_height(other.m_height)
-{}
 
 unsigned int Font::Height()
 {
