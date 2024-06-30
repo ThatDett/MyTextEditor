@@ -89,24 +89,27 @@ void Editor::TextCursorMove(Direction direction)
 
 void Editor::NewLine()
 {
-    
-    //capacity - numberoflines;
-
-    
-    //numberoflines - textCursor.vIndex;
-
-           //number of lines we need to move     //freespace
-    if ((NumberOfLines() - textCursor.vIndex) - 1 <= m_capacity - NumberOfLines())
+    if (m_capacity - NumberOfLines() > 0)
     {
-        memmove(
-            (&CurrentLine()) + 2,
-            (&CurrentLine()) + 1,
-            (NumberOfLines() - textCursor.vIndex) * sizeof(lines[0])
-        );
+        int i = 0;
+        for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
+        {
+            if (ptr->buffersize > 0)
+                memcpy(ptr[1].buffer, ptr->buffer, ptr->buffersize);
+            else
+                memset(ptr[1].buffer, 0, ptr[1].buffersize);
+            ptr[1].buffersize = ptr->buffersize;
+            ptr[1].cursorIndex = ptr->cursorIndex;
+        }
+
 
         ++textCursor.vIndex;
-        textCursor.hIndex = CurrentLine().cursorIndex;
+        textCursor.hIndex = 0;
         ++m_size;
+
+        memset(CurrentLine().buffer, 0, CurrentLine().buffersize); 
+        CurrentLine().cursorIndex = 0;
+        CurrentLine().buffersize = 0;
     }
     else
     {
@@ -116,7 +119,14 @@ void Editor::NewLine()
 
 void Editor::Grow()
 {
-    std::cout << "Grow editor" << std::endl;
+    delete[] lines;
+    lines = nullptr;
+
+    m_capacity *= 2;
+    if (!(lines = new Line[m_capacity]))
+        std::cout << "Editor::Grow couldn't reallocate" << std::endl;
+
+    NewLine();
 }
 
 Line& Editor::CurrentLine()

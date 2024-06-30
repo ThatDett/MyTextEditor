@@ -27,6 +27,7 @@ set(DEBUG_BUILD 1)
 # Define optimization flags based on build type
 if(${DEBUG_BUILD} EQUAL 1)
     add_compile_options(-O0)
+    add_compile_options(-g)
 else(${DEBUG_BUILD} EQUAL 0)
     add_compile_options(-O2)
 endif()

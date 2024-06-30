@@ -43,7 +43,7 @@ GLenum glCheckError_(std::string_view file, int line)
 #define GLCheck(x) x; glCheckError_(__FILE__, __LINE__) 
 
 Window window("Text Editor", 1366, 768);
-Editor editor(2);
+Editor editor(100);
 
 void FramebuffersizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -103,6 +103,10 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
     {
         switch (key)
         {   
+            case GLFW_KEY_ENTER:
+            {
+                editor.NewLine();
+            } break;
             case GLFW_KEY_LEFT:
             {
                 editor.TextCursorMove(Direction::LEFT);
@@ -190,8 +194,10 @@ void Application::Run()
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for (uint32_t i = 0; i < editor.NumberOfLines(); ++i)
-            renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
+        for (uint32_t i = 0; i < 45; ++i)
+        {
+           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
+        }
 
         renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
@@ -200,7 +206,7 @@ void Application::Run()
         renderer.DrawText("editor.size: " + std::to_string(editor.m_size), glm::vec2(1000.0f, 650.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.capacity: " + std::to_string(editor.Capacity()), glm::vec2(1000.0f, 630.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.NumberOfLines" + std::to_string(editor.NumberOfLines()), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("canInsertNewLine: " + std::to_string((editor.NumberOfLines() - editor.textCursor.vIndex) - 1 <= editor.Capacity() - editor.NumberOfLines()), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("canInsertNewLine: " + std::to_string(editor.Capacity() - editor.NumberOfLines() > 0), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
         float ypos = 0;
