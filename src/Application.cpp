@@ -42,12 +42,14 @@ GLenum glCheckError_(std::string_view file, int line)
 
 #define GLCheck(x) x; glCheckError_(__FILE__, __LINE__) 
 
-Window window("Text Editor", 1366, 768);
-Editor editor(100);
+Window window("Text Editor");
+Editor editor(23);
 
-void FramebuffersizeCallback(GLFWwindow *window, int width, int height)
+void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
 {
     glViewport(0, 0, width, height);
+    window.width = width; 
+    window.height = height; 
 } 
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
@@ -62,14 +64,12 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_F11:
             {
-                const GLFWvidmode *mode = glfwGetVideoMode(window.monitor);
-
                 glfwSetWindowMonitor(	
                     window.ptr,
                     window.fullscreen? NULL : window.monitor,
                     0, 30,
-                    mode->width, mode->height - 30, 
-                    mode->refreshRate
+                    window.mode->width, window.mode->height - 30, 
+                    window.mode->refreshRate
                 );	
                 window.fullscreen = !window.fullscreen;
             } break;
@@ -134,28 +134,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
 
 void CharInputCallback(GLFWwindow *window, unsigned int codepoint)
 {
-    if (editor.CurrentLine().buffersize < editor.CurrentLine().Size() - 1)
-    {
-        if (editor.textCursor.hIndex == editor.CurrentLine().buffersize)
-        {
-            editor.CurrentLine().buffer[editor.textCursor.hIndex] = codepoint;
-            ++editor.CurrentLine().buffersize;
-            ++editor.textCursor.hIndex;
-            editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-        }
-        else
-        {
-            memmove(   
-                &editor.CurrentLine().CharAtIndex(1), 
-                &editor.CurrentLine().CharAtIndex(), 
-                editor.CurrentLine().buffersize - editor.textCursor.hIndex
-            );
-            editor.CurrentLine().buffer[editor.textCursor.hIndex] = codepoint;
-            ++editor.CurrentLine().buffersize;
-            ++editor.textCursor.hIndex;
-            editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-        }
-    }
+    editor.InsertChar(codepoint);
 }
 
 Application::Application()
@@ -186,9 +165,10 @@ void Application::Run()
 {
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/BaskervilleBT.ttf", 0, 24));
+    Renderer renderer(Shader("../src/shaders/font.glsl"), Font("../res/Consolas.ttf", 0, 24));
 
     Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec3(1.0f, 1.0f, 1.0f));
+    Rectangle bottomBar(glm::vec2(0, window.height - 32.0), window.width, 32, glm::vec3(0.01f, 0.04f, 0.07f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
@@ -199,7 +179,7 @@ void Application::Run()
            renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * renderer.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
         }
 
-        renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().buffersize), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().Size()), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.hIndex: " + std::to_string(editor.textCursor.hIndex), glm::vec2(1000.0f, 690.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.vIndex: " + std::to_string(editor.textCursor.vIndex), glm::vec2(1000.0f, 670.0f), glm::vec4(1.0f), 1.0f);
@@ -224,6 +204,7 @@ void Application::Run()
 
         cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
         cursor.Draw();
+        bottomBar.Draw();
 
         glfwSwapBuffers(window.ptr);
         glfwWaitEventsTimeout(0.5);

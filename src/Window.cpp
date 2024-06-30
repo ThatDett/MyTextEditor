@@ -3,8 +3,7 @@
 #include "glad/glad.h"
 #include "Window.hpp"
 
-Window::Window(const char *name, GLuint width, GLuint height) :
-    name(name), width(width), height(height)
+void Window::PreCreate()
 {
     if (!glfwInit())
     {   
@@ -13,15 +12,17 @@ Window::Window(const char *name, GLuint width, GLuint height) :
     }
 
     monitor = glfwGetPrimaryMonitor();
-
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    mode = glfwGetVideoMode(monitor);
  
     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+}
 
-    ptr = glfwCreateWindow(width, height, this->name.c_str(), monitor, NULL);
+void Window::Create(int width, int height, const char *name)
+{
+    ptr = glfwCreateWindow(width, height, name, monitor, NULL);
     if (!ptr)
     {
         std::cout << "Fail on window creation\n";
@@ -41,3 +42,27 @@ Window::Window(const char *name, GLuint width, GLuint height) :
         exit(EXIT_FAILURE);
     }
 }
+
+Window::Window(const char *name, GLuint width, GLuint height) :
+    name(name), width(width), height(height)
+{
+    PreCreate();
+    Create(width, height, name);
+}
+
+Window::Window(const char *name) :
+    name(name)
+{
+    PreCreate();
+
+    width = mode->width;
+    height = mode->height;
+    screenWidth = height;
+    screenHeight = height;
+
+    Create(width, height, name);
+}
+
+
+
+

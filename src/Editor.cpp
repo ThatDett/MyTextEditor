@@ -13,13 +13,40 @@ Editor::~Editor()
     delete[] lines;
 }
 
+void Editor::InsertChar(int codepoint)
+{
+    if (CurrentLine().Size() < CurrentLine().Capacity() - 1)
+    {
+        if (textCursor.hIndex == CurrentLine().Size())
+        {
+            CurrentLine().buffer[textCursor.hIndex] = codepoint;
+            ++CurrentLine().m_bufferSize;
+            ++textCursor.hIndex;
+            CurrentLine().cursorIndex = textCursor.hIndex;
+        }
+        else
+        {
+            memmove(   
+                &CurrentLine().CharAtIndex(1), 
+                &CurrentLine().CharAtIndex(), 
+                CurrentLine().Size() - textCursor.hIndex
+            );
+
+            CurrentLine().buffer[textCursor.hIndex] = codepoint;
+            ++CurrentLine().m_bufferSize;
+            ++textCursor.hIndex;
+            CurrentLine().cursorIndex = textCursor.hIndex;
+        }
+    }
+}
+
 void Editor::EraseText()
 {
     if (textCursor.hIndex > 0)
     {
-        if (CurrentLine().buffersize > 0)
+        if (CurrentLine().Size() > 0)
         {
-            if (textCursor.hIndex == CurrentLine().buffersize)
+            if (textCursor.hIndex == CurrentLine().Size())
             {
                 CurrentLine().buffer[textCursor.hIndex - 1] = 0;
             }
@@ -28,11 +55,11 @@ void Editor::EraseText()
                 memmove(
                     &CurrentLine().CharAtIndex(-1), 
                     &CurrentLine().CharAtIndex(), 
-                    CurrentLine().buffersize - textCursor.hIndex
+                    CurrentLine().Size() - textCursor.hIndex
                 );
-                CurrentLine().buffer[CurrentLine().buffersize - 1] = 0;
+                CurrentLine().buffer[CurrentLine().Size() - 1] = 0;
             }
-            --CurrentLine().buffersize;
+            --CurrentLine().m_bufferSize;
             --textCursor.hIndex;
             --CurrentLine().cursorIndex = textCursor.hIndex;
         }   
@@ -42,7 +69,7 @@ void Editor::EraseText()
         if (textCursor.vIndex > 0)
         {
             --textCursor.vIndex;
-            textCursor.hIndex = CurrentLine().buffersize;
+            textCursor.hIndex = CurrentLine().Size();
             CurrentLine().cursorIndex = textCursor.hIndex;
         }
     }
@@ -62,7 +89,7 @@ void Editor::TextCursorMove(Direction direction)
         } break;
         case Direction::RIGHT:
         {
-            if (textCursor.hIndex < CurrentLine().buffersize)
+            if (textCursor.hIndex < CurrentLine().Size())
             {
                 ++textCursor.hIndex;
                 CurrentLine().cursorIndex = textCursor.hIndex;
@@ -89,44 +116,59 @@ void Editor::TextCursorMove(Direction direction)
 
 void Editor::NewLine()
 {
-    if (m_capacity - NumberOfLines() > 0)
-    {
-        int i = 0;
-        for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
-        {
-            if (ptr->buffersize > 0)
-                memcpy(ptr[1].buffer, ptr->buffer, ptr->buffersize);
-            else
-                memset(ptr[1].buffer, 0, ptr[1].buffersize);
-            ptr[1].buffersize = ptr->buffersize;
-            ptr[1].cursorIndex = ptr->cursorIndex;
-        }
-
-
-        ++textCursor.vIndex;
-        textCursor.hIndex = 0;
-        ++m_size;
-
-        memset(CurrentLine().buffer, 0, CurrentLine().buffersize); 
-        CurrentLine().cursorIndex = 0;
-        CurrentLine().buffersize = 0;
-    }
-    else
-    {
+    if (Capacity() - NumberOfLines() < 1)
         Grow();
+
+    int i = 0;
+    for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; 
+        i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
+    {
+        if (ptr->Size() > 0)
+             memcpy(ptr[1].buffer, ptr->buffer, ptr->Size());
+        else
+            memset(ptr[1].buffer, 0, ptr[1].Size());
+        ptr[1].m_bufferSize = ptr->Size();
+        ptr[1].cursorIndex = ptr->cursorIndex;
     }
+
+    ++textCursor.vIndex;
+    textCursor.hIndex = 0;
+    ++m_size;
+
+    memset(CurrentLine().buffer, 0, CurrentLine().Size()); 
+    CurrentLine().cursorIndex = 0;
+    CurrentLine().m_bufferSize = 0;
 }
 
 void Editor::Grow()
 {
-    delete[] lines;
-    lines = nullptr;
+    Line *temp;
 
     m_capacity *= 2;
-    if (!(lines = new Line[m_capacity]))
+    if (!(temp = new Line[Capacity()]))
+    {
         std::cout << "Editor::Grow couldn't reallocate" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-    NewLine();
+    for (size_t i = 0; i < NumberOfLines(); ++i)
+    {
+        if (lines[i].Size() > 0)
+        {
+            memcpy(temp[i].buffer, lines[i].buffer, lines[i].Size());
+
+            temp[i].m_bufferSize = lines[i].Size();
+            temp[i].cursorIndex = lines[i].cursorIndex;
+        }
+    }
+
+    delete[] lines;
+    lines = temp;
+}
+
+void Editor::DeleteLine()
+{
+
 }
 
 Line& Editor::CurrentLine()

@@ -4,7 +4,6 @@
 
 Line::Line(unsigned int bufferSize) :
     buffer(new char[bufferSize]), 
-    buffersize(0),
     m_bufferSize(0),
     m_bufferCapacity(bufferSize)
 {

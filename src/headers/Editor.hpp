@@ -20,10 +20,12 @@ public:
     Editor(uint32_t numberOfLines);
     ~Editor();
 
+    void InsertChar(int codepoint);
     void EraseText();
     void TextCursorMove(Direction direction);
     void NewLine();
     void Grow();
+    void DeleteLine();
 
     Line& CurrentLine();
     unsigned int NumberOfLines();
