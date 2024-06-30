@@ -43,7 +43,7 @@ GLenum glCheckError_(std::string_view file, int line)
 #define GLCheck(x) x; glCheckError_(__FILE__, __LINE__) 
 
 Window window("Text Editor", 1366, 768);
-Editor editor(32);
+Editor editor(2);
 
 void FramebuffersizeCallback(GLFWwindow *window, int width, int height)
 {
@@ -52,97 +52,6 @@ void FramebuffersizeCallback(GLFWwindow *window, int width, int height)
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
-    enum Direction
-    {
-        RIGHT,
-        LEFT,
-        UP,
-        DOWN
-    };
-
-    auto OnArrowMove = [](int direction)
-    {
-        switch (direction)
-        {
-            case Direction::LEFT:
-            {
-                if (editor.textCursor.hIndex > 0)
-                {
-                    --editor.textCursor.hIndex;
-                    editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-                }
-            } break;
-            case Direction::RIGHT:
-            {
-                if (editor.textCursor.hIndex < editor.CurrentLine().buffersize)
-                {
-                    ++editor.textCursor.hIndex;
-                    editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-                }
-            } break;
-            case Direction::UP:
-            {
-                if (editor.textCursor.vIndex > 0)
-                {
-                   --editor.textCursor.vIndex;
-                   editor.textCursor.hIndex = editor.CurrentLine().cursorIndex;
-                }
-            } break;
-            case Direction::DOWN:
-            {
-                if (editor.textCursor.vIndex < editor.NumberOfLines() - 1)
-                {
-                    ++editor.textCursor.vIndex;
-                    editor.textCursor.hIndex = editor.CurrentLine().cursorIndex;
-                }
-            } break;
-        }
-    };
-
-    auto OnBackspace = []()
-    {
-        if (editor.textCursor.hIndex > 0)
-        {
-            if (editor.CurrentLine().buffersize > 0)
-            {
-                if (editor.textCursor.hIndex == editor.CurrentLine().buffersize)
-                {
-                    editor.CurrentLine().buffer[editor.textCursor.hIndex - 1] = 0;
-                }
-                else
-                {
-                    memmove(
-                        &editor.CurrentLine().CharAtIndex(-1), 
-                        &editor.CurrentLine().CharAtIndex(), 
-                        editor.CurrentLine().buffersize - editor.textCursor.hIndex
-                    );
-                    editor.CurrentLine().buffer[editor.CurrentLine().buffersize - 1] = 0;
-                }
-                --editor.CurrentLine().buffersize;
-                --editor.textCursor.hIndex;
-                --editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-            }   
-        }
-        else
-        {
-            if (editor.textCursor.vIndex > 0)
-            {
-                --editor.textCursor.vIndex;
-                editor.textCursor.hIndex = editor.CurrentLine().buffersize;
-                editor.CurrentLine().cursorIndex = editor.textCursor.hIndex;
-            }
-        }
-    };
-
-    auto OnEnter = []()
-    {
-        // memmove(
-        //     &editor.CurrentLine() + 1,
-        //     &editor.CurrentLine(),
-        //     (editor.NumberOfLines() - editor.textCursor.vIndex) * sizeof(Line)
-        // );
-    };
-
     if (action == GLFW_PRESS)
     {
         switch (key)
@@ -166,27 +75,27 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_ENTER:
             {
-                OnEnter();
+                editor.NewLine();
             } break;
             case GLFW_KEY_LEFT:
             {
-                OnArrowMove(Direction::LEFT);
+                editor.TextCursorMove(Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                OnArrowMove(Direction::RIGHT);
+                editor.TextCursorMove(Direction::RIGHT);
             } break;
             case GLFW_KEY_UP:
             {
-                OnArrowMove(Direction::UP);
+                editor.TextCursorMove(Direction::UP);
             } break;
             case GLFW_KEY_DOWN:
             {
-                OnArrowMove(Direction::DOWN);
+                editor.TextCursorMove(Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
-                OnBackspace();
+                editor.EraseText();
             } break;
         }
     }
@@ -196,23 +105,23 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
         {   
             case GLFW_KEY_LEFT:
             {
-                OnArrowMove(Direction::LEFT);
+                editor.TextCursorMove(Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                OnArrowMove(Direction::RIGHT);
+                editor.TextCursorMove(Direction::RIGHT);
             } break;
             case GLFW_KEY_UP:
             {
-                OnArrowMove(Direction::UP);
+                editor.TextCursorMove(Direction::UP);
             } break;
             case GLFW_KEY_DOWN:
             {
-                OnArrowMove(Direction::DOWN);
+                editor.TextCursorMove(Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
-                OnBackspace();  
+                editor.EraseText();  
             } break;
         }
     }
@@ -288,6 +197,10 @@ void Application::Run()
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.hIndex: " + std::to_string(editor.textCursor.hIndex), glm::vec2(1000.0f, 690.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("editor.textCursor.vIndex: " + std::to_string(editor.textCursor.vIndex), glm::vec2(1000.0f, 670.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("editor.size: " + std::to_string(editor.m_size), glm::vec2(1000.0f, 650.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("editor.capacity: " + std::to_string(editor.Capacity()), glm::vec2(1000.0f, 630.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("editor.NumberOfLines" + std::to_string(editor.NumberOfLines()), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("canInsertNewLine: " + std::to_string((editor.NumberOfLines() - editor.textCursor.vIndex) - 1 <= editor.Capacity() - editor.NumberOfLines()), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
         float ypos = 0;

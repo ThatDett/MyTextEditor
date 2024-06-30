@@ -144,7 +144,7 @@ Shader::~Shader()
     if (ownershipCounter[program] == 1)
     {
         glDeleteProgram(program);
-        std::cout << "delete shader program: " << program << " reference count: " << ownershipCounter[program] << std::endl;
+        // std::cout << "delete shader program: " << program << " reference count: " << ownershipCounter[program] << std::endl;
     }
     else
         --ownershipCounter[program];

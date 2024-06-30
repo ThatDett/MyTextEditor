@@ -15,8 +15,8 @@ public:
     unsigned int Capacity();
 public:
     char *buffer;
-    unsigned int cursorIndex = 0;
     unsigned int buffersize = 0;
+    unsigned int cursorIndex = 0;
 private:
     unsigned int m_bufferSize;
     unsigned int m_bufferCapacity;

@@ -3,7 +3,9 @@
 #include "Line.hpp"
 
 Line::Line(unsigned int bufferSize) :
-    buffer(new char[bufferSize]), m_bufferSize(bufferSize),
+    buffer(new char[bufferSize]), 
+    buffersize(0),
+    m_bufferSize(0),
     m_bufferCapacity(bufferSize)
 {
     memset(buffer, 0, bufferSize);

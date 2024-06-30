@@ -1,14 +1,122 @@
+#include <iostream>
+
 #include "Editor.hpp"
 
 Editor::Editor(uint32_t numberOfLines) :
-    lines(new Line[numberOfLines]), 
+    lines(new Line[numberOfLines * 2]), 
     m_size(numberOfLines),
-    m_capacity(numberOfLines)
+    m_capacity(numberOfLines * 2)
 {}
 
 Editor::~Editor()
 {
     delete[] lines;
+}
+
+void Editor::EraseText()
+{
+    if (textCursor.hIndex > 0)
+    {
+        if (CurrentLine().buffersize > 0)
+        {
+            if (textCursor.hIndex == CurrentLine().buffersize)
+            {
+                CurrentLine().buffer[textCursor.hIndex - 1] = 0;
+            }
+            else
+            {
+                memmove(
+                    &CurrentLine().CharAtIndex(-1), 
+                    &CurrentLine().CharAtIndex(), 
+                    CurrentLine().buffersize - textCursor.hIndex
+                );
+                CurrentLine().buffer[CurrentLine().buffersize - 1] = 0;
+            }
+            --CurrentLine().buffersize;
+            --textCursor.hIndex;
+            --CurrentLine().cursorIndex = textCursor.hIndex;
+        }   
+    }
+    else
+    {
+        if (textCursor.vIndex > 0)
+        {
+            --textCursor.vIndex;
+            textCursor.hIndex = CurrentLine().buffersize;
+            CurrentLine().cursorIndex = textCursor.hIndex;
+        }
+    }
+}
+
+void Editor::TextCursorMove(Direction direction)
+{
+    switch (direction)
+    {
+        case Direction::LEFT:
+        {
+            if (textCursor.hIndex > 0)
+            {
+                --textCursor.hIndex;
+                CurrentLine().cursorIndex = textCursor.hIndex;
+            }
+        } break;
+        case Direction::RIGHT:
+        {
+            if (textCursor.hIndex < CurrentLine().buffersize)
+            {
+                ++textCursor.hIndex;
+                CurrentLine().cursorIndex = textCursor.hIndex;
+            }
+        } break;
+        case Direction::UP:
+        {
+            if (textCursor.vIndex > 0)
+            {
+               --textCursor.vIndex;
+               textCursor.hIndex = CurrentLine().cursorIndex;
+            }
+        } break;
+        case Direction::DOWN:
+        {
+            if (textCursor.vIndex < NumberOfLines() - 1)
+            {
+                ++textCursor.vIndex;
+                textCursor.hIndex = CurrentLine().cursorIndex;
+            }
+        } break;
+    }
+}
+
+void Editor::NewLine()
+{
+    
+    //capacity - numberoflines;
+
+    
+    //numberoflines - textCursor.vIndex;
+
+           //number of lines we need to move     //freespace
+    if ((NumberOfLines() - textCursor.vIndex) - 1 <= m_capacity - NumberOfLines())
+    {
+        memmove(
+            (&CurrentLine()) + 2,
+            (&CurrentLine()) + 1,
+            (NumberOfLines() - textCursor.vIndex) * sizeof(lines[0])
+        );
+
+        ++textCursor.vIndex;
+        textCursor.hIndex = CurrentLine().cursorIndex;
+        ++m_size;
+    }
+    else
+    {
+        Grow();
+    }
+}
+
+void Editor::Grow()
+{
+    std::cout << "Grow editor" << std::endl;
 }
 
 Line& Editor::CurrentLine()
@@ -19,4 +127,9 @@ Line& Editor::CurrentLine()
 unsigned int Editor::NumberOfLines()
 {
     return m_size;
+}
+
+unsigned int Editor::Capacity()
+{
+    return m_capacity;
 }
