@@ -196,7 +196,7 @@ Application::Application()
 
     for (unsigned int i = 0; i < 24; ++i)
     {
-        fonts[0][i].filepath = "../res/Consolas.ttf";
+        fonts[0][i].filepath = "../res/fonts/Consolas.ttf";
         fonts[0][i].LoadFont(0, 16 + (i * 4));
     }
 }
@@ -215,7 +215,7 @@ void Application::Run()
 
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    Renderer renderer(Shader("../src/shaders/font.glsl"), fonts[0][0]);
+    Renderer renderer(Shader("../res/shaders/font.glsl"), fonts[0][0]);
     editor.renderer = &renderer;
 
     Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));

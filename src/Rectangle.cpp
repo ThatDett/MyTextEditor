@@ -12,7 +12,7 @@ GLuint indices[] = {0, 1, 2, 2, 3, 0};
 
 Rectangle::Rectangle() :
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
-    rectShader("../src/shaders/rectangle.glsl")
+    rectShader("../res/shaders/rectangle.glsl")
 {
 
 }
@@ -20,7 +20,7 @@ Rectangle::Rectangle() :
 Rectangle::Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color) :
     pos(pos), color(color), width(width), height(height),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
-    rectShader("../src/shaders/rectangle.glsl")
+    rectShader("../res/shaders/rectangle.glsl")
 {
     vao.Bind();
     vbo.Bind().SendData();

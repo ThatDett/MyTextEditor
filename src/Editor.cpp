@@ -130,18 +130,22 @@ void Editor::NewLine()
     for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; 
         i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
     {
-        memset(ptr[1].buffer, 0, ptr[1].Size());
+        //We don't need to do this in the first iteration
+        if (ptr[1].Size() > 0)
+            memset(ptr[1].buffer, 0, ptr[1].Size());
 
+        //Next iteration cleans us
         if (ptr->Size() > 0)
-        {
             memcpy(ptr[1].buffer, ptr->buffer, ptr->Size());
-        }
         
         ptr[1].m_bufferSize = ptr->Size();
         ptr[1].cursorIndex = ptr->cursorIndex;
 
+        //Last iteration
         if (ptr == &CurrentLine() + 1)
         {
+            memset(ptr->buffer, 0, ptr->Size());
+
             if (textCursor.hIndex < CurrentLine().Size())
             {
                 memcpy(
@@ -162,7 +166,6 @@ void Editor::NewLine()
             }
             else
             {
-                memset(ptr->buffer, 0, ptr->Size()); 
                 ptr->cursorIndex = 0;
                 ptr->m_bufferSize = 0;
             }
