@@ -42,10 +42,10 @@ GLenum glCheckError_(std::string_view file, int line)
 
 #define GLCheck(x) x; glCheckError_(__FILE__, __LINE__) 
 
-Font fonts[1][16];
+Font fonts[1][24];
 
 Window window("Text Editor");
-Editor editor(Font("../res/Consolas.ttf", 0, 24), 32);
+Editor editor(32);
 
 void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
 {
@@ -54,7 +54,7 @@ void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
     window.height = height; 
 } 
 
-unsigned int fontIndex = 0;
+unsigned int fontIndex = 2;
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
@@ -73,7 +73,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_F9:
             {
-                if (fontIndex < 11)
+                if (fontIndex < 23)
                     ++fontIndex;
             } break;
             case GLFW_KEY_F11:
@@ -87,6 +87,11 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
                 );	
                 window.fullscreen = !window.fullscreen;
             } break;
+            case GLFW_KEY_TAB:
+            {
+                for (int i = 0; i < 4; ++i)
+                    editor.InsertChar(' ');
+            } break;
             case GLFW_KEY_ENTER:
             {
                 editor.NewLine();
@@ -109,7 +114,10 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_BACKSPACE:
             {
-                editor.EraseText();
+                if (editor.textCursor.hIndex > 0)
+                    editor.EraseText();
+                else if (editor.textCursor.vIndex > 0)
+                    editor.DeleteLine();
             } break;
         }
     }
@@ -117,6 +125,21 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
     {
         switch (key)
         {   
+            case GLFW_KEY_F8:
+            {
+                if (fontIndex > 0)
+                    --fontIndex;
+            } break;
+            case GLFW_KEY_F9:
+            {
+                if (fontIndex < 23)
+                    ++fontIndex;
+            } break;
+            case GLFW_KEY_TAB:
+            {
+                for (int i = 0; i < 4; ++i)
+                    editor.InsertChar(' ');
+            } break;
             case GLFW_KEY_ENTER:
             {
                 editor.NewLine();
@@ -139,7 +162,10 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_BACKSPACE:
             {
-                editor.EraseText();  
+                if (editor.textCursor.hIndex > 0)
+                    editor.EraseText();
+                else if (editor.textCursor.vIndex > 0)
+                    editor.DeleteLine();
             } break;
         }
     }
@@ -168,10 +194,10 @@ Application::Application()
 
     stbi_set_flip_vertically_on_load(true);
 
-    for (unsigned int i = 0; i < 16; ++i)
+    for (unsigned int i = 0; i < 24; ++i)
     {
         fonts[0][i].filepath = "../res/Consolas.ttf";
-        fonts[0][i].LoadFont(0, 20 + (i * (4 + i / 3)));
+        fonts[0][i].LoadFont(0, 16 + (i * 4));
     }
 }
 
@@ -183,22 +209,22 @@ Application::~Application()
 
 void Application::Run()
 {
+    Line commandLine;
+
+    memcpy(commandLine.buffer, "Command test", strlen("Command test"));
+
     glClearColor(0.01f, 0.05f, 0.08f, 1.0f);
 
-    Renderer renderer(Shader("../src/shaders/font.glsl"), editor.font);
+    Renderer renderer(Shader("../src/shaders/font.glsl"), fonts[0][0]);
+    editor.renderer = &renderer;
 
     Rectangle cursor(glm::vec2(200.0f, 21.0f), 1, 22, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     Rectangle bottomBar(glm::vec2(0, window.height - 36), window.width, 36, glm::vec4(0.0f, 0.02f, 0.04f, 1.0f));
 
     while (LOOP && !glfwWindowShouldClose(window.ptr))
     {
-        renderer.font = &fonts[0][fontIndex];
+        editor.SetFont(fonts[0][fontIndex]);
         glClear(GL_COLOR_BUFFER_BIT);
-
-        for (uint32_t i = 0; i < 45; ++i)
-        {
-           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, 730.0f - (i * editor.font.Height() + 4)), glm::vec4(1.0f), 1.0f);
-        }
 
         renderer.DrawText("current line buffersize: " + std::to_string(editor.CurrentLine().Size()), glm::vec2(1000.0f, 730.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("current line cursorIndex: " + std::to_string(editor.CurrentLine().cursorIndex), glm::vec2(1000.0f, 710.0f), glm::vec4(1.0f), 1.0f);
@@ -210,22 +236,30 @@ void Application::Run()
         renderer.DrawText("fullscreen: " + std::to_string(window.fullscreen), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
-        float ypos = 0;
+        float ypos = 10.0f;
+
+        //Drawing the lines
+        for (uint32_t i = 0; i < 45; ++i)
+        {
+           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, window.height - 10.0f - ((i + 1) * editor.font->Height() + 4)), glm::vec4(1.0f), 1.0f);
+        }
 
         //<= ?
         for (unsigned int i = 0; i < editor.textCursor.hIndex; ++i)
         {
-            xpos += renderer.font->characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
+            xpos += editor.font->characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
         }
 
-        for (unsigned int i = 1; i < editor.textCursor.vIndex + 1; ++i)
-        {
-            ypos = i * renderer.font->Height() + 4;
-        }
+        ypos += editor.textCursor.vIndex * editor.font->Height() - 12.0f + fontIndex;
+        
+        cursor.width = 1 + (float)fontIndex/12.0f;
+        cursor.height = editor.font->Height();
 
         cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
         cursor.Draw();
         bottomBar.Draw();
+
+        renderer.DrawText(commandLine.buffer, glm::vec2(bottomBar.pos.x + 10, bottomBar.height / 2 - editor.font->Height() / 3));
 
         glfwSwapBuffers(window.ptr);
         glfwWaitEventsTimeout(1);

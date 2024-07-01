@@ -12,16 +12,19 @@ class Rectangle
 {
 public:
     Rectangle();
-    Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec4 color = glm::vec4(1.0f));
+    Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color = glm::vec4(1.0f));
 
     void Draw();
 public:
     glm::vec2 pos;
     glm::vec2 lastpos;
     glm::vec3 color;
+
+    int width;
+    int height;
 private:
-    GLuint m_width;
-    GLuint m_height;
+    int lastWidth;
+    int lastHeight;
 
     VertexArray vao;
     VertexBuffer vbo;

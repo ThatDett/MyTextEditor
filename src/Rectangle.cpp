@@ -17,8 +17,8 @@ Rectangle::Rectangle() :
 
 }
 
-Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec4 color) :
-    pos(pos), color(color), m_width(width), m_height(height),
+Rectangle::Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color) :
+    pos(pos), color(color), width(width), height(height),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
     rectShader("../src/shaders/rectangle.glsl")
 {
@@ -35,7 +35,7 @@ Rectangle::Rectangle(glm::vec2 pos, GLuint width, GLuint height, glm::vec4 color
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(pos.x, pos.y, 0.0f));
-    model = glm::scale(model, glm::vec3((float)m_width, (float)m_height, 1.0f));
+    model = glm::scale(model, glm::vec3((float)width, (float)height, 1.0f));
 
     rectShader.SetMat4("u_model", model);
     rectShader.SetVec4("u_color", color.x, color.y, color.z, color.w);
@@ -53,14 +53,16 @@ void Rectangle::Draw()
 
     rectShader.Use();
 
-    if (lastpos != pos)
+    if (lastpos != pos || lastWidth != width || lastHeight != height)
     {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(pos.x, pos.y, 0.0f));
-        model = glm::scale(model, glm::vec3((float)m_width, (float)m_height, 1.0f));
+        model = glm::scale(model, glm::vec3((float)width, (float)height, 1.0f));
 
         rectShader.SetMat4("u_model", model);
         lastpos = pos;
+        lastWidth = width;
+        lastWidth = height;
     }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

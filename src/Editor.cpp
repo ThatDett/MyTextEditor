@@ -2,8 +2,8 @@
 
 #include "Editor.hpp"
 
-Editor::Editor(const Font &font, uint32_t numberOfLines) :
-    font(font),
+Editor::Editor(uint32_t numberOfLines) :
+    font(nullptr),
     lines(new Line[numberOfLines * 2]), 
     m_size(numberOfLines),
     m_capacity(numberOfLines * 2)
@@ -12,6 +12,12 @@ Editor::Editor(const Font &font, uint32_t numberOfLines) :
 Editor::~Editor()
 {
     delete[] lines;
+}
+
+void Editor::SetFont(Font &font)
+{
+    this->font = &font;
+    renderer->font = this->font;
 }
 
 void Editor::InsertChar(int codepoint)
@@ -133,15 +139,38 @@ void Editor::NewLine()
         
         ptr[1].m_bufferSize = ptr->Size();
         ptr[1].cursorIndex = ptr->cursorIndex;
+
+        if (ptr == &CurrentLine() + 1)
+        {
+            if (textCursor.hIndex < CurrentLine().Size())
+            {
+                memcpy(
+                    ptr->buffer, 
+                    CurrentLine().buffer + textCursor.hIndex, 
+                    CurrentLine().Size() - textCursor.hIndex
+                );
+
+                ptr->m_bufferSize = CurrentLine().Size() - textCursor.hIndex;
+                ptr->cursorIndex = 0;
+
+                memset(
+                    CurrentLine().buffer + textCursor.hIndex,
+                    0, CurrentLine().Size() - textCursor.hIndex
+                );
+
+                CurrentLine().m_bufferSize -= CurrentLine().Size() - textCursor.hIndex;
+            }
+            else
+            {
+                memset(ptr->buffer, 0, ptr->Size()); 
+                ptr->cursorIndex = 0;
+                ptr->m_bufferSize = 0;
+            }
+            ++textCursor.vIndex;
+            textCursor.hIndex = 0;
+            ++m_size;
+        }
     }
-
-    ++textCursor.vIndex;
-    textCursor.hIndex = 0;
-    ++m_size;
-
-    memset(CurrentLine().buffer, 0, CurrentLine().Size()); 
-    CurrentLine().cursorIndex = 0;
-    CurrentLine().m_bufferSize = 0;
 }
 
 void Editor::Grow()
@@ -172,7 +201,57 @@ void Editor::Grow()
 
 void Editor::DeleteLine()
 {
+    //We should have the assurance that there's at least one line above the current
+    int i = 0;
+    for (Line *ptr = &CurrentLine(); i < (NumberOfLines() - textCursor.vIndex) - 1; ++ptr, ++i)
+    {
+        //If it is the first iteration
+        if (ptr->Size() > 0)
+        {
+            if (ptr == &CurrentLine())
+            {
+                //We also need to assure ptr[-1] has enough capacity
+                memcpy(
+                    ptr[-1].buffer + ptr[-1].Size(),
+                    ptr->buffer,
+                    ptr->Size()
+                );
+                memset(
+                    ptr->buffer,
+                    0, ptr->Size()
+                );
 
+                textCursor.hIndex = ptr[-1].m_bufferSize;
+                ptr[-1].m_bufferSize += ptr->Size();
+                ptr->m_bufferSize = 0;
+            }
+            else
+            {
+                memcpy(
+                    ptr[-1].buffer,
+                    ptr->buffer,
+                    ptr->Size()
+                );
+                memset(
+                    ptr->buffer,
+                    0, ptr->Size()
+                );
+
+                ptr[-1].m_bufferSize = ptr->Size();
+                ptr[-1].cursorIndex = ptr->cursorIndex;
+
+                ptr->m_bufferSize = 0;
+                ptr->cursorIndex = 0;
+            }
+        }
+        else
+        {
+            if (ptr == &CurrentLine())
+                textCursor.hIndex = ptr[-1].Size(); 
+        }
+    }
+    --textCursor.vIndex;
+    --m_size;
 }
 
 Line& Editor::CurrentLine()

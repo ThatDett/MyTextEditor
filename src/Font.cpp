@@ -70,6 +70,8 @@ void Font::LoadFont(unsigned int width, unsigned int height)
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
+
+    this->m_height =  height; 
 }
 
 unsigned int Font::Height()
