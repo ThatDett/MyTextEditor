@@ -14,11 +14,12 @@ public:
     Rectangle();
     Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color = glm::vec4(1.0f));
 
+    Rectangle& ChangeColor(const glm::vec4 &color);
     void Draw();
 public:
     glm::vec2 pos;
     glm::vec2 lastpos;
-    glm::vec3 color;
+    glm::vec4 color;
 
     int width;
     int height;
@@ -32,5 +33,6 @@ private:
 
     Shader rectShader;
 private:
+    void Initialize();
 };
 #endif

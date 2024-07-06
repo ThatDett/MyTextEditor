@@ -11,16 +11,22 @@ float rectVertices[] =
 GLuint indices[] = {0, 1, 2, 2, 3, 0};
 
 Rectangle::Rectangle() :
+    color(glm::vec4(1.0f)),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
     rectShader("../res/shaders/rectangle.glsl")
 {
-
+    Initialize();
 }
 
 Rectangle::Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color) :
     pos(pos), color(color), width(width), height(height),
     vbo(rectVertices, sizeof(rectVertices)), ibo(indices, sizeof(indices)),
     rectShader("../res/shaders/rectangle.glsl")
+{
+    Initialize();
+}
+
+void Rectangle::Initialize()
 {
     vao.Bind();
     vbo.Bind().SendData();
@@ -38,11 +44,20 @@ Rectangle::Rectangle(glm::vec2 pos, int width, int height, glm::vec4 color) :
     model = glm::scale(model, glm::vec3((float)width, (float)height, 1.0f));
 
     rectShader.SetMat4("u_model", model);
-    rectShader.SetVec4("u_color", color.x, color.y, color.z, color.w);
+    ChangeColor(color);
 
     vbo.Unbind();
     ibo.Unbind();
     vao.Unbind();
+}
+
+Rectangle& Rectangle::ChangeColor(const glm::vec4 &color)
+{
+    this->color = color;
+
+    rectShader.Use();
+    rectShader.SetVec4("u_color", color.x, color.y, color.z, color.w);
+    return *this;
 }
 
 void Rectangle::Draw()

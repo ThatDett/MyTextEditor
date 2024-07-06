@@ -3,20 +3,28 @@
 
 #include <cstdint>
 
-
 #include "Renderer.hpp"
 #include "Font.hpp"
 #include "TextCursor.hpp"
 #include "Line.hpp"
+#include "Rectangle.hpp"
 
 #include "GLFW/glfw3.h"
 
 enum Direction
 {
-    RIGHT,
-    LEFT,
-    UP,
-    DOWN
+    LEFT  = -1,
+    UP    = 0,
+    RIGHT = 1,
+    DOWN  = 2
+};
+
+struct Selector 
+{
+    //x = column, y = row
+    glm::vec2 start;
+    glm::vec2 end;
+    Rectangle box;
 };
 
 class Editor
@@ -41,11 +49,11 @@ public:
     Renderer *renderer;
     Font *font;
     TextCursor textCursor;
+    Selector selector = {.start = {0, 0}, .end = {0, 0}};
     Line *lines;
 private:
-
-    uint64_t m_size;
-    uint64_t m_capacity;
+    size_t m_size;
+    size_t m_capacity;
 private:
 };
 #endif

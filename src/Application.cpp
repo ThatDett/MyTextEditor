@@ -236,7 +236,7 @@ void Application::Run()
         renderer.DrawText("editor.capacity: " + std::to_string(editor.Capacity()), glm::vec2(1000.0f, 630.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("canInsertNewLine: " + std::to_string(editor.Capacity() - editor.NumberOfLines() > 0), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("fullscreen: " + std::to_string(window.fullscreen), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
-        renderer.DrawText("timer: " + std::to_string(timer), glm::vec2(1000.0f, 570.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("box.x: " + std::to_string(editor.selector.box.pos.x), glm::vec2(1000.0f, 570.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
         float ypos = 10.0f;
@@ -250,7 +250,7 @@ void Application::Run()
         //<= ?
         for (unsigned int i = 0; i < editor.textCursor.hIndex; ++i)
         {
-            xpos += editor.font->characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
+            xpos += editor.font->characters[editor.CurrentLine().CharAtIndex(i)].Advance.x >> 6;
         }
 
         ypos += editor.textCursor.vIndex * editor.font->Height() - 15.0f + fontIndex / 2;
@@ -262,6 +262,20 @@ void Application::Run()
 
         if (timer > 0 || (int)glfwGetTime() % 2 == 0)
             cursor.Draw();
+
+        editor.selector.box.pos.x = 0;
+        editor.selector.box.pos.y = 20;
+        editor.selector.box.width = 200;
+        editor.selector.box.height = editor.font->Height();
+        editor.selector.box.ChangeColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.3f));
+
+        for (unsigned int i = 0; i < editor.selector.start.x; ++i)
+        {
+            editor.selector.box.pos.x += editor.font->characters[editor.CurrentLine().CharAtIndex(i)].Advance.x >> 6;
+        }
+
+        if (editor.selector.box.pos.x != editor.selector.box.pos.y)
+            editor.selector.box.Draw();
 
         bottomBar.Draw();
 

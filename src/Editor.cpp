@@ -96,38 +96,46 @@ void Editor::TextCursorMove(GLFWwindow *window, Direction direction)
     bool capslock = glfwGetKey(window, GLFW_KEY_CAPS_LOCK)    == GLFW_PRESS;
     bool shift    = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS;
 
-    (void)capslock; (void)shift;
+    (void)capslock; 
 
     switch (direction)
     {
-        //For left and right it needs to skip for spaces as well
+        //If there's non-alpha characters inbetween spaces it will ignore it
         case Direction::LEFT:
-        {
-            for (;;)
-            {
-                if (textCursor.hIndex < 1) break;
-                textCursor.hIndex -= 1;
-
-                if (!control) break;
-                if (CurrentLine().CharAtIndex(textCursor.hIndex - 1) == ' ') break;
-                if (CurrentLine().CharAtIndex(textCursor.hIndex) == ' ') break;
-            }
-
-            CurrentLine().cursorIndex = textCursor.hIndex;
-        } break;
         case Direction::RIGHT:
         {
-            for (;;)
-            {
+            if (direction == Direction::LEFT)
+                if (textCursor.hIndex < 1) break;
+            if (direction == Direction::RIGHT)
                 if (textCursor.hIndex > CurrentLine().Size() - 1) break;
-                textCursor.hIndex += 1;
 
-                if (!control) break;
-                if (CurrentLine().CharAtIndex(textCursor.hIndex + 1) == ' ') break;
-                if (CurrentLine().CharAtIndex(textCursor.hIndex) == ' ') break;
+            selector.start = {3, 0};
+            selector.end   = {10, 0};
+
+            textCursor.hIndex += direction;
+
+            if (!control) break;
+            textCursor.hIndex -= direction;
+
+            if (isalpha(CurrentLine().CharAtIndex(textCursor.hIndex - (int)(direction == Direction::LEFT))))
+            {
+                while (isalpha(CurrentLine().CharAtIndex(textCursor.hIndex - (int)(direction == Direction::LEFT))))
+                {
+                    textCursor.hIndex += direction;
+                }
             }
+            else
+            {
+                while (!isalpha(CurrentLine().CharAtIndex(textCursor.hIndex - (int)(direction == Direction::LEFT))))
+                {
+                    if (direction == Direction::LEFT)
+                        if (textCursor.hIndex < 1) break;
+                    if (direction == Direction::RIGHT)
+                        if (textCursor.hIndex > CurrentLine().Size() - 1) break;
 
-            CurrentLine().cursorIndex = textCursor.hIndex;
+                    textCursor.hIndex += direction;
+                }
+            }
         } break;
         case Direction::UP:
         {
@@ -146,6 +154,7 @@ void Editor::TextCursorMove(GLFWwindow *window, Direction direction)
             }
         } break;
     }
+    CurrentLine().cursorIndex = textCursor.hIndex;
 }
 
 void Editor::NewLine()
@@ -196,6 +205,7 @@ void Editor::NewLine()
                 ptr->cursorIndex = 0;
                 ptr->m_bufferSize = 0;
             }
+
             ++textCursor.vIndex;
             textCursor.hIndex = 0;
             ++m_size;
@@ -221,6 +231,7 @@ void Editor::Grow()
             memcpy(temp[i].buffer, lines[i].buffer, lines[i].Size());
 
             temp[i].m_bufferSize = lines[i].Size();
+            temp[i].m_bufferCapacity = lines[i].Capacity();
             temp[i].cursorIndex = lines[i].cursorIndex;
         }
     }
