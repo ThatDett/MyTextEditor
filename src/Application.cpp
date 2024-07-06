@@ -55,9 +55,11 @@ void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
 } 
 
 unsigned int fontIndex = 2;
+int timer = 0;
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
+    timer = 120;
     if (action == GLFW_PRESS)
     {
         switch (key)
@@ -90,7 +92,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             case GLFW_KEY_TAB:
             {
                 for (int i = 0; i < 4; ++i)
-                    editor.InsertChar(' ');
+                    editor.InsertChar(glfwwindow, ' ');
             } break;
             case GLFW_KEY_ENTER:
             {
@@ -138,7 +140,7 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             case GLFW_KEY_TAB:
             {
                 for (int i = 0; i < 4; ++i)
-                    editor.InsertChar(' ');
+                    editor.InsertChar(glfwwindow, ' ');
             } break;
             case GLFW_KEY_ENTER:
             {
@@ -172,9 +174,9 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
     else {}
 }
 
-void CharInputCallback(GLFWwindow *window, unsigned int codepoint)
+void CharInputCallback(GLFWwindow *glfwwindow, unsigned int codepoint)
 {
-    editor.InsertChar(codepoint);
+    editor.InsertChar(glfwwindow, codepoint);
 }
 
 Application::Application()
@@ -234,6 +236,7 @@ void Application::Run()
         renderer.DrawText("editor.capacity: " + std::to_string(editor.Capacity()), glm::vec2(1000.0f, 630.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("canInsertNewLine: " + std::to_string(editor.Capacity() - editor.NumberOfLines() > 0), glm::vec2(1000.0f, 610.0f), glm::vec4(1.0f), 1.0f);
         renderer.DrawText("fullscreen: " + std::to_string(window.fullscreen), glm::vec2(1000.0f, 590.0f), glm::vec4(1.0f), 1.0f);
+        renderer.DrawText("timer: " + std::to_string(timer), glm::vec2(1000.0f, 570.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
         float ypos = 10.0f;
@@ -250,18 +253,25 @@ void Application::Run()
             xpos += editor.font->characters[editor.CurrentLine().buffer[i]].Advance.x >> 6;
         }
 
-        ypos += editor.textCursor.vIndex * editor.font->Height() - 12.0f + fontIndex;
+        ypos += editor.textCursor.vIndex * editor.font->Height() - 15.0f + fontIndex / 2;
         
         cursor.width = 1 + (float)fontIndex/12.0f;
         cursor.height = editor.font->Height();
 
         cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
-        cursor.Draw();
+
+        if (timer > 0 || (int)glfwGetTime() % 2 == 0)
+            cursor.Draw();
+
         bottomBar.Draw();
 
         renderer.DrawText(commandLine.buffer, glm::vec2(bottomBar.pos.x + 10, bottomBar.height / 2 - editor.font->Height() / 3));
 
+        if (timer > 0)
+            --timer;
+        
+
         glfwSwapBuffers(window.ptr);
-        glfwWaitEventsTimeout(1);
+        glfwPollEvents();
     }
 }

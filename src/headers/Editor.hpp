@@ -3,10 +3,13 @@
 
 #include <cstdint>
 
+
 #include "Renderer.hpp"
 #include "Font.hpp"
 #include "TextCursor.hpp"
 #include "Line.hpp"
+
+#include "GLFW/glfw3.h"
 
 enum Direction
 {
@@ -24,7 +27,7 @@ public:
 
     void SetFont(Font &font);
 
-    void InsertChar(int codepoint);
+    void InsertChar(GLFWwindow* window, int codepoint);
     void EraseText();
     void TextCursorMove(Direction direction);
     void NewLine();

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ostream>
 
 #include "Editor.hpp"
 
@@ -20,8 +21,12 @@ void Editor::SetFont(Font &font)
     renderer->font = this->font;
 }
 
-void Editor::InsertChar(int codepoint)
+void Editor::InsertChar(GLFWwindow  *window, int codepoint)
 {
+    bool control  = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+    bool capslock = glfwGetKey(window, GLFW_KEY_CAPS_LOCK)    == GLFW_PRESS;
+    bool shift    = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS;
+
     if (CurrentLine().Size() < CurrentLine().Capacity() - 1)
     {
         if (textCursor.hIndex == CurrentLine().Size())
@@ -127,8 +132,8 @@ void Editor::NewLine()
         Grow();
 
     int i = 0;
-    for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex) - 1; 
-        i < (NumberOfLines() - textCursor.vIndex) - 1; --ptr, ++i)
+    for (Line *ptr = &CurrentLine() + (NumberOfLines() - textCursor.vIndex); 
+        i < (NumberOfLines() - textCursor.vIndex); --ptr, ++i)
     {
         //We don't need to do this in the first iteration
         if (ptr[1].Size() > 0)
@@ -181,7 +186,7 @@ void Editor::Grow()
     Line *temp;
 
     m_capacity *= 2;
-    if (!(temp = new Line[Capacity()]))
+    if (!(temp = new Line[m_capacity]))
     {
         std::cout << "Editor::Grow couldn't reallocate" << std::endl;
         exit(EXIT_FAILURE);
@@ -205,8 +210,11 @@ void Editor::Grow()
 void Editor::DeleteLine()
 {
     //We should have the assurance that there's at least one line above the current
-    int i = 0;
-    for (Line *ptr = &CurrentLine(); i < (NumberOfLines() - textCursor.vIndex) - 1; ++ptr, ++i)
+    for (
+        Line *ptr = &CurrentLine(); 
+        ptr != &CurrentLine() + (NumberOfLines() - textCursor.vIndex); 
+        ++ptr
+    )
     {
         //If it is the first iteration
         if (ptr->Size() > 0)
@@ -219,6 +227,7 @@ void Editor::DeleteLine()
                     ptr->buffer,
                     ptr->Size()
                 );
+
                 memset(
                     ptr->buffer,
                     0, ptr->Size()
@@ -250,9 +259,13 @@ void Editor::DeleteLine()
         else
         {
             if (ptr == &CurrentLine())
-                textCursor.hIndex = ptr[-1].Size(); 
+               textCursor.hIndex = ptr[-1].Size(); 
         }
     }
+
+    // if (textCursor.vIndex + 1 == NumberOfLines())
+    //     textCursor.hIndex = lines[textCursor.vIndex - 1].Size();
+
     --textCursor.vIndex;
     --m_size;
 }
