@@ -27,9 +27,9 @@ public:
 
     void SetFont(Font &font);
 
-    void InsertChar(GLFWwindow* window, int codepoint);
+    void InsertChar(GLFWwindow*, int codepoint);
     void EraseText();
-    void TextCursorMove(Direction direction);
+    void TextCursorMove(GLFWwindow*, Direction);
     void NewLine();
     void Grow();
     void DeleteLine();

@@ -15,14 +15,10 @@ Line::~Line()
     delete[] buffer;
 }
 
-char& Line::CharAtIndex()
+char Line::CharAtIndex(int index)
 {
-    return buffer[cursorIndex];
-}
-
-char& Line::CharAtIndex(int offset)
-{
-    return buffer[cursorIndex + offset];
+    if (index < 0 || index > Size() - 1) return '\0';
+    return buffer[index];
 }
 
 unsigned int Line::Size()

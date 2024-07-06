@@ -2,6 +2,7 @@
 #include <ostream>
 
 #include "Editor.hpp"
+#include "GLFW/glfw3.h"
 
 Editor::Editor(uint32_t numberOfLines) :
     font(nullptr),
@@ -27,6 +28,8 @@ void Editor::InsertChar(GLFWwindow  *window, int codepoint)
     bool capslock = glfwGetKey(window, GLFW_KEY_CAPS_LOCK)    == GLFW_PRESS;
     bool shift    = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS;
 
+    (void)control; (void)capslock; (void)shift;
+
     if (CurrentLine().Size() < CurrentLine().Capacity() - 1)
     {
         if (textCursor.hIndex == CurrentLine().Size())
@@ -39,8 +42,8 @@ void Editor::InsertChar(GLFWwindow  *window, int codepoint)
         else
         {
             memmove(   
-                &CurrentLine().CharAtIndex(1), 
-                &CurrentLine().CharAtIndex(), 
+                &CurrentLine().buffer[CurrentLine().cursorIndex + 1], 
+                &CurrentLine().buffer[CurrentLine().cursorIndex], 
                 CurrentLine().Size() - textCursor.hIndex
             );
 
@@ -65,8 +68,8 @@ void Editor::EraseText()
             else
             {
                 memmove(
-                    &CurrentLine().CharAtIndex(-1), 
-                    &CurrentLine().CharAtIndex(), 
+                    &CurrentLine().buffer[CurrentLine().cursorIndex - 1], 
+                    &CurrentLine().buffer[CurrentLine().cursorIndex], 
                     CurrentLine().Size() - textCursor.hIndex
                 );
                 CurrentLine().buffer[CurrentLine().Size() - 1] = 0;
@@ -87,25 +90,44 @@ void Editor::EraseText()
     }
 }
 
-void Editor::TextCursorMove(Direction direction)
+void Editor::TextCursorMove(GLFWwindow *window, Direction direction)
 {
+    bool control  = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+    bool capslock = glfwGetKey(window, GLFW_KEY_CAPS_LOCK)    == GLFW_PRESS;
+    bool shift    = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)   == GLFW_PRESS;
+
+    (void)capslock; (void)shift;
+
     switch (direction)
     {
+        //For left and right it needs to skip for spaces as well
         case Direction::LEFT:
         {
-            if (textCursor.hIndex > 0)
+            for (;;)
             {
-                --textCursor.hIndex;
-                CurrentLine().cursorIndex = textCursor.hIndex;
+                if (textCursor.hIndex < 1) break;
+                textCursor.hIndex -= 1;
+
+                if (!control) break;
+                if (CurrentLine().CharAtIndex(textCursor.hIndex - 1) == ' ') break;
+                if (CurrentLine().CharAtIndex(textCursor.hIndex) == ' ') break;
             }
+
+            CurrentLine().cursorIndex = textCursor.hIndex;
         } break;
         case Direction::RIGHT:
         {
-            if (textCursor.hIndex < CurrentLine().Size())
+            for (;;)
             {
-                ++textCursor.hIndex;
-                CurrentLine().cursorIndex = textCursor.hIndex;
+                if (textCursor.hIndex > CurrentLine().Size() - 1) break;
+                textCursor.hIndex += 1;
+
+                if (!control) break;
+                if (CurrentLine().CharAtIndex(textCursor.hIndex + 1) == ' ') break;
+                if (CurrentLine().CharAtIndex(textCursor.hIndex) == ' ') break;
             }
+
+            CurrentLine().cursorIndex = textCursor.hIndex;
         } break;
         case Direction::UP:
         {

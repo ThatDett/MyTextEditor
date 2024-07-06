@@ -1,8 +1,6 @@
 #ifndef LINE_H
 #define LINE_H
 
-#include <vector>
-
 class Line
 {
     friend class Editor;
@@ -10,8 +8,7 @@ public:
     Line(unsigned int bufferSize = 256);
     ~Line();
 
-    char& CharAtIndex();
-    char& CharAtIndex(int offset);
+    char CharAtIndex(int index);
     unsigned int Size();
     unsigned int Capacity();
 public:

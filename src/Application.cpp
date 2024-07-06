@@ -100,19 +100,19 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_LEFT:
             {
-                editor.TextCursorMove(Direction::LEFT);
+                editor.TextCursorMove(glfwwindow, Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                editor.TextCursorMove(Direction::RIGHT);
+                editor.TextCursorMove(glfwwindow, Direction::RIGHT);
             } break;
             case GLFW_KEY_UP:
             {
-                editor.TextCursorMove(Direction::UP);
+                editor.TextCursorMove(glfwwindow, Direction::UP);
             } break;
             case GLFW_KEY_DOWN:
             {
-                editor.TextCursorMove(Direction::DOWN);
+                editor.TextCursorMove(glfwwindow, Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
@@ -148,19 +148,19 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
             } break;
             case GLFW_KEY_LEFT:
             {
-                editor.TextCursorMove(Direction::LEFT);
+                editor.TextCursorMove(glfwwindow, Direction::LEFT);
             } break;
             case GLFW_KEY_RIGHT:
             {
-                editor.TextCursorMove(Direction::RIGHT);
+                editor.TextCursorMove(glfwwindow, Direction::RIGHT);
             } break;
             case GLFW_KEY_UP:
             {
-                editor.TextCursorMove(Direction::UP);
+                editor.TextCursorMove(glfwwindow, Direction::UP);
             } break;
             case GLFW_KEY_DOWN:
             {
-                editor.TextCursorMove(Direction::DOWN);
+                editor.TextCursorMove(glfwwindow, Direction::DOWN);
             } break;
             case GLFW_KEY_BACKSPACE:
             {
