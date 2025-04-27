@@ -2,7 +2,10 @@
 #include <unordered_map>
 #include <string>
 
+#include "common.hpp"
 #include "glad/glad.h"
+#include "GLFW/glfw3.h"
+#include "TextCursor.hpp"
 
 #include "CMakeVariables.h"
 
@@ -35,7 +38,7 @@ GLenum glCheckError_(std::string_view file, int line)
             case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
             case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
         }
-        std::cout << errorCode << ": " << error << " | " << file << " (" << line << ")" << std::endl;
+        std::cerr << errorCode << ": " << error << " | " << file << " (" << line << ")" << std::endl;
     }
     return errorCode;
 }
@@ -56,6 +59,7 @@ void FramebuffersizeCallback(GLFWwindow *glfwwindow, int width, int height)
 
 unsigned int fontIndex = 2;
 int timer = 0;
+float textYOffset = 0.f;
 
 void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int action, int mods)
 {   
@@ -174,9 +178,15 @@ void KeyboardInputCallback(GLFWwindow *glfwwindow, int key, int scancode, int ac
     else {}
 }
 
-void CharInputCallback(GLFWwindow *glfwwindow, unsigned int codepoint)
+void CharInputCallback(GLFWwindow* glfwwindow, unsigned int codepoint)
 {
     editor.InsertChar(glfwwindow, codepoint);
+}
+
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    textYOffset += yoffset * fontIndex * 5;
+    textYOffset = glm::clamp(textYOffset, 0.f, 99999999.f);
 }
 
 Application::Application()
@@ -185,9 +195,10 @@ Application::Application()
 
     glViewport(0, 0, window.width, window.height);
 
-    glfwSetFramebufferSizeCallback(window.ptr, FramebuffersizeCallback);
-    glfwSetKeyCallback(window.ptr, KeyboardInputCallback);
-    glfwSetCharCallback(window.ptr, CharInputCallback);
+    glfwSetFramebufferSizeCallback(window.ptr, &FramebuffersizeCallback);
+    glfwSetKeyCallback(window.ptr, &KeyboardInputCallback);
+    glfwSetCharCallback(window.ptr, &CharInputCallback);
+    glfwSetScrollCallback(window.ptr, &ScrollCallback);
 
     glfwSetInputMode(window.ptr, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
@@ -239,12 +250,12 @@ void Application::Run()
         renderer.DrawText("box.x: " + std::to_string(editor.selector.box.pos.x), glm::vec2(1000.0f, 570.0f), glm::vec4(1.0f), 1.0f);
 
         float xpos = 0;
-        float ypos = 10.0f;
+        float ypos = 20.0f;
 
         //Drawing the lines
         for (uint32_t i = 0; i < 45; ++i)
         {
-           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, window.height - 10.0f - ((i + 1) * editor.font->Height() + 4)), glm::vec4(1.0f), 1.0f);
+           renderer.DrawText(editor.lines[i].buffer, glm::vec2(20.0f, window.height - 20.0f - ((i + 1) * editor.font->Height()) + textYOffset), glm::vec4(1.0f), 1.0f);
         }
 
         //<= ?
@@ -253,18 +264,17 @@ void Application::Run()
             xpos += editor.font->characters[editor.CurrentLine().CharAtIndex(i)].Advance.x >> 6;
         }
 
-        ypos += editor.textCursor.vIndex * editor.font->Height() - 15.0f + fontIndex / 2;
-        
         cursor.width = 1 + (float)fontIndex/12.0f;
         cursor.height = editor.font->Height();
 
-        cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos);
+        ypos += editor.textCursor.vIndex * editor.font->Height() - 17.0f + fontIndex / 2;  
+        cursor.pos = glm::vec2(20.0f + xpos, 22.0f + ypos - textYOffset);
 
         if (timer > 0 || (int)glfwGetTime() % 2 == 0)
             cursor.Draw();
 
-        editor.selector.box.pos.x = 0;
-        editor.selector.box.pos.y = 20;
+        editor.selector.box.pos.x = 20.0f;
+        editor.selector.box.pos.y = 20.0f;
         editor.selector.box.width = 200;
         editor.selector.box.height = editor.font->Height();
         editor.selector.box.ChangeColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.3f));

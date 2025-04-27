@@ -49,7 +49,7 @@ public:
     Renderer *renderer;
     Font *font;
     TextCursor textCursor;
-    Selector selector = {.start = {0, 0}, .end = {0, 0}};
+    Selector selector = {.start = {0.0f, 0.0f}, .end = {0.0f, 0.0f}};
     Line *lines;
 private:
     size_t m_size;

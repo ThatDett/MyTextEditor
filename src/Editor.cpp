@@ -59,25 +59,24 @@ void Editor::EraseText()
 {
     if (textCursor.hIndex > 0)
     {
-        if (CurrentLine().Size() > 0)
+        if (CurrentLine().Size() < 1) return;
+
+        if (textCursor.hIndex == CurrentLine().Size())
         {
-            if (textCursor.hIndex == CurrentLine().Size())
-            {
-                CurrentLine().buffer[textCursor.hIndex - 1] = 0;
-            }
-            else
-            {
-                memmove(
-                    &CurrentLine().buffer[CurrentLine().cursorIndex - 1], 
-                    &CurrentLine().buffer[CurrentLine().cursorIndex], 
-                    CurrentLine().Size() - textCursor.hIndex
-                );
-                CurrentLine().buffer[CurrentLine().Size() - 1] = 0;
-            }
-            --CurrentLine().m_bufferSize;
-            --textCursor.hIndex;
-            --CurrentLine().cursorIndex = textCursor.hIndex;
-        }   
+            CurrentLine().buffer[textCursor.hIndex - 1] = 0;
+        }
+        else
+        {
+            memmove(
+                &CurrentLine().buffer[CurrentLine().cursorIndex - 1], 
+                &CurrentLine().buffer[CurrentLine().cursorIndex], 
+                CurrentLine().Size() - textCursor.hIndex
+            );
+            CurrentLine().buffer[CurrentLine().Size() - 1] = 0;
+        }
+        --CurrentLine().m_bufferSize;
+        --textCursor.hIndex;
+        --CurrentLine().cursorIndex = textCursor.hIndex;
     }
     else
     {
@@ -109,10 +108,10 @@ void Editor::TextCursorMove(GLFWwindow *window, Direction direction)
             if (direction == Direction::RIGHT)
                 if (textCursor.hIndex > CurrentLine().Size() - 1) break;
 
-            selector.start = {3, 0};
-            selector.end   = {10, 0};
-
             textCursor.hIndex += direction;
+
+            selector.start.x = textCursor.hIndex;
+            selector.end.x   = 10;
 
             if (!control) break;
             textCursor.hIndex -= direction;
